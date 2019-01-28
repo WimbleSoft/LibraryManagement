@@ -1,8 +1,8 @@
 <?php
 session_start(); 
-if((!isset($_SESSION["login"]))||($_SESSION["yetki"]=="0")){
+if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 ?>
-<meta http-equiv="refresh" content="0;URL=giris.php">
+<meta http-equiv="refresh" content="0;URL=login.php">
 <?php
 } else
 {
@@ -10,23 +10,24 @@ if((!isset($_SESSION["login"]))||($_SESSION["yetki"]=="0")){
 
 <!-- Giriş KONTROL -->
 <?php include("header.php") ?>
-<?php include("kontrol/veritabani.php") ?>
+<?php include("database.php") ?>
 
 <!-- PAGE CONTENT -->
 
+
 <script>
-document.getElementById("anahtarlar").className = "active";
+document.getElementById("books").className = "active";
 </script>
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
       <h1>
-        Anahtarlar
+        <?=$lang["Books"];?>
       </h1>
       <ol class="breadcrumb">
-        <li class="active"><a href="#"><i class="fa fa-dashboard"></i> Anasayfa</a></li>
-        <li><a href="#">Anahtarlar</a></li>
+        <li class="active"><a href="#"><i class="fa fa-dashboard"></i> <?=$lang["Homepage"];?></a></li>
+        <li><a href="#"><?=$lang["Books"];?></a></li>
       </ol>
     </section>
 
@@ -36,10 +37,13 @@ document.getElementById("anahtarlar").className = "active";
         <div class="col-xs-12">
           <div class="box">
             <div class="box-header">
-              <div class="col-md-6">
+              
+			 
+
+        <div class="col-md-6">
           <div class="box box-default collapsed-box">
             <div class="box-header with-border">
-              <h3 class="box-title">Yeni Anahtar Ekle</h3>
+              <h3 class="box-title"><?=$lang["Add_a_Book"];?></h3>
 
               <div class="box-tools">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
@@ -53,17 +57,17 @@ document.getElementById("anahtarlar").className = "active";
 			
 			<!-- form -->
 			
-			<form role="form" method="post" enctype="multipart/form-data" action="anahtarlar-ekle.php">
+			<form role="form" method="post" enctype="multipart/form-data" action="books-add.php">
               <div class="box-body">
                 <div class="form-group">
 					<div class="col-md-5">
-						<input name="numara" type="text"class="form-control" id="numara" placeholder="Anahtar Numarasını Girin">
+						<input  name="bookName" type="text" class="form-control" id="bookName" placeholder="<?=$lang["Enter_Book_Name"];?>">
 					</div>
 					<div class="col-md-5">
-						<input name="icerigi" type="text" class="form-control" id="icerigi" placeholder="Anahtar İçeriği Girin">
+						<input  name="bookWriter" type="text" class="form-control" id="bookWriter" placeholder="<?=$lang["Enter_Book_Writer"];?>">
 					</div>
 					<div class="col-md-2">
-						<button type="submit" class="btn btn-primary">Anahtarı Ekle</button>
+						<button type="submit" class="btn btn-primary"><?=$lang["Add_the_Book"];?></button>
 					</div>
 				</div>
               </div>
@@ -88,26 +92,26 @@ document.getElementById("anahtarlar").className = "active";
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
 				  <tr>
-					<th>Numara</th>
-					<th>İçeriği</th>
-					<th>Durum</th>
-					<th>İşlemler</th>
+					<th><?=$lang["Book_Name"];?></th>
+					<th><?=$lang["Writer"];?></th>
+					<th><?=$lang["Status"];?></th>	
+					<th><?=$lang["Operations"];?></th>
 				  </tr>
 				</thead>
 
 				<tbody>
 					<?php
-					$vericek=$connection->query("select * from anahtarlar")->fetchAll(PDO::FETCH_ASSOC);
-					foreach ($vericek as $vcek)
+					$pullBooks=$connection->query("select * from books")->fetchAll(PDO::FETCH_ASSOC);
+					foreach ($pullBooks as $pulledBook)
 					{
 					?>
 				  <tr>
-					<td><?=$vcek['numara'];?></td>
-					<td><?=$vcek['icerigi'];?></td>
+					<td><?=$pulledBook['bookName'];?></td>
+					<td><?=$pulledBook['bookWriter'];?></td>
 					<td>
 					<div class="box box-default collapsed-box" style="border:1px solid #00a65a;">
 						<div class="box-header with-border">
-						  <h4 class="box-title"><?php if($vcek['durum']=='0')echo'Dolapta'; else echo'Ödünç Verildi';?></h4>
+						  <h4 class="box-title"><?php if($pulledBook['status']=='0')echo $lang["In_inventory"]; else echo $lang["Lent"];?></h4>
 						  <div class="box-tools">
 							<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
 							</button>
@@ -115,64 +119,66 @@ document.getElementById("anahtarlar").className = "active";
 						</div>
 						<div class="box-body">
 							<?php
-							if($vcek['durum']=='1')
+							if($pulledBook['status']=='1')
 							{
-								$id=$vcek['id'];
-								$odunccek=$connection->query("select * from oduncler where tur='Anahtar' AND urunid='$id' AND iadealan=''")->fetchAll(PDO::FETCH_ASSOC);
-								foreach ($odunccek as $ocek)
+								$bookId=$pulledBook['bookId'];
+								$pullLoan=$connection->query("select * from loans where type='1' AND productId='$bookId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
+								foreach ($pullLoan as $pulledLoan)
 								{
-									echo 'Bu '.$ocek['tur'].', '.$ocek['odunctarihi'].' tarihinde ';
+									echo 'Bu '.$pulledLoan['type'].', '.$pulledLoan['loanDate'].' tarihinde ';
 									
-									$percek=$connection->query("select * from personel where id=".$ocek['oduncalan']."")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($percek as $pcek)
+									$pullPersonnel=$connection->query("select * from personnel where personnelId=".$pulledLoan['loanerId']."")->fetchAll(PDO::FETCH_ASSOC);
+									foreach ($pullPersonnel as $pulledPersonnel)
 									{
-									echo $pcek['adsoyad'];
+									echo $pulledPersonnel['nameSurname'];
 									}
 									echo ' tarafından ';
-									$percek2=$connection->query("select * from personel where id=".$ocek['oduncalan']."")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($percek2 as $pcek2)
+									$pullPersonnel2=$connection->query("select * from personnel where personnelId=".$pulledLoan['loanerId']."")->fetchAll(PDO::FETCH_ASSOC);
+									foreach ($pullPersonnel2 as $pulledPersonnel2)
 									{
-									echo $pcek2['adsoyad'];
+									echo $pulledPersonnel2['nameSurname'];
 									}
 									echo ' adlı personele emanet edilmiştir.';
-									if ($ocek['iadetarihi']!="0000-00-00") 
+									if ($pulledLoan['returnDate']!="0000-00-00") 
 									{
-									//echo $ocek['iadetarihi'].' tarihinde, '.$ocek['iadealan'].' tarafından iade alınmıştır.';
+									//echo $pulledLoan['returnDate'].' tarihinde, '.$pulledLoan['returnAccepterId'].' tarafından iade alınmıştır.';
 									}
-									else echo 'Bu anahtar henüz iade alınmamıştır.';
+									else echo 'Bu <?=$lang["Book"];?> henüz iade alınmamıştır.';
 								}
 							}
 							?>
 						</div>
 					</div>
 					</td>
+					
+					
 					<!-- Small modal -->
 					<div class="modal fade bs-example-modal-lg" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 					  <div class="modal-dialog" role="document">
 						<div class="modal-content">
-							<form role="form" method="post" enctype="multipart/form-data" action="anahtarlar-duzenle.php">
+							<form role="form" method="post" enctype="multipart/form-data" action="books-edit.php">
 							  <div class="modal-header">
 								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-								<h4 class="modal-title" id="myModalLabel">Anahtar Düzenle</h4>
+								<h4 class="modal-title" id="myModalLabel"><?=$lang["Book"];?> <?=$lang["Edit"];?></h4>
 							  </div>
 							  <div class="modal-body">
 								<div class="form-group">
 									<div class="col-md-6">
-									<label>Anahtar Numarası</label>
-										<input name="numara" type="text" id="numara" class="form-control"  placeholder="Anahtar Numarası Girin" value="<?=$vcek['numara'];?>">
-										<input name="id" type="text" id="id" hidden="hidden" value="<?=$vcek['id'];?>">
+									<label><?=$lang["Book_Name"];?></label>
+										<input name="bookName" type="text" id="bookName" class="form-control"  placeholder="<?=$lang["Book_Name"];?> Girin" value="<?=$pulledBook['bookName'];?>">
+										<input name="bookId" type="text" id="bookId" hidden="hidden" value="<?=$pulledBook['bookId'];?>">
 									</div>
 									
 									<div class="col-md-6">
-									<label>Anahtar İçeriği</label>
-										<input name="icerigi" type="text" id="icerigi" class="form-control"  placeholder="Anahtar İçeriğini Girin" value="<?=$vcek['icerigi'];?>">
+									<label><?=$lang["Book"];?> <?=$lang["Writer"];?></label>
+										<input name="bookWriter" type="text" id="bookWriter" class="form-control"  placeholder="-<?=$lang["Book"];?> <?=$lang["Writer"];?>nı Girin" value="<?=$pulledBook['bookWriter'];?>">
 									</div>
 									
 								</div>
 							  </div>
 							  <div class="modal-footer">
-								<button type="button" class="btn btn-default " data-dismiss="modal">Kapat</button>
-								<button type="submit" class="btn btn-warning">Kaydet</button>
+								<button type="button" class="btn btn-default" data-dismiss="modal"><?=$lang["Cancel"];?></button>
+								<button type="submit" class="btn btn-warning"><?=$lang["Save"];?></button>
 							  </div>
 							</form>
 						</div>
@@ -181,7 +187,7 @@ document.getElementById("anahtarlar").className = "active";
 					<td>
 					  <span class="button-group">
 						<button type="button" class="btn btn-warning fa fa-pencil" data-toggle="modal" data-target="#myModal"></button>
-						<a href="anahtarlar-sil.php?id=<?=$vcek['id'];?>" onclick="return confirm('İçeriği silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve bu anahtara ait ödünç bilgileri de silinecektir!');" class="fa fa-trash btn btn-danger"></a>
+						<a href="books-delete.php?bookId=<?=$pulledBook['bookId'];?>" onclick="return confirm('<?=$lang["Are_you_sure_to_delete"];?>');" class="fa fa-trash btn btn-danger"></a>
 					  </span>
 					</td>
 				  </tr>
@@ -200,6 +206,7 @@ document.getElementById("anahtarlar").className = "active";
     <!-- /.content -->
   </div>
   <!-- /.content-wrapper -->
+  
   <!-- jQuery 2.2.3 -->
 <script src="plugins/jQuery/jquery-2.2.3.min.js"></script>
 <!-- Bootstrap 3.3.6 -->

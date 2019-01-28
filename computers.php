@@ -1,8 +1,8 @@
 <?php
-session_start(); 
-if((!isset($_SESSION["login"]))||($_SESSION["yetki"]=="0")){
+session_start();
+if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 ?>
-<meta http-equiv="refresh" content="0;URL=giris.php">
+<meta http-equiv="refresh" content="0;URL=login.php">
 <?php
 } else
 {
@@ -10,11 +10,11 @@ if((!isset($_SESSION["login"]))||($_SESSION["yetki"]=="0")){
 
 <!-- Giriş KONTROL -->
 <?php include("header.php") ?>
-<?php include("kontrol/veritabani.php") ?>
+<?php include("database.php") ?>
 
 <!-- PAGE CONTENT -->
 <script>
-document.getElementById("bilgisayarlar").className = "active";
+document.getElementById("computers").className = "active";
 </script>
 
   <!-- Content Wrapper. Contains page content -->
@@ -22,11 +22,11 @@ document.getElementById("bilgisayarlar").className = "active";
     <!-- Content Header (Page header) -->
     <section class="content-header">
       <h1>
-        Bilgisayarlar
+        <?=$lang["Computers"];?>
       </h1>
       <ol class="breadcrumb">
-        <li class="active"><a href="#"><i class="fa fa-dashboard"></i> Anasayfa</a></li>
-        <li><a href="#">Bilgisayarlar</a></li>
+        <li class="active"><a href="#"><i class="fa fa-dashboard"></i> <?=$lang["Homepage"];?></a></li>
+        <li><a href="#"><?=$lang["Computers"];?></a></li>
       </ol>
     </section>
 
@@ -36,11 +36,11 @@ document.getElementById("bilgisayarlar").className = "active";
         <div class="col-xs-12">
           <div class="box">
             <div class="box-header">
-            
+
 			 <div class="col-md-6">
           <div class="box box-default collapsed-box">
             <div class="box-header with-border">
-              <h3 class="box-title">Yeni Bilgisayar Ekle</h3>
+              <h3 class="box-title"><?=$lang["Add_New_Computer"];?></h3>
 
               <div class="box-tools">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
@@ -49,25 +49,25 @@ document.getElementById("bilgisayarlar").className = "active";
               <!-- /.box-tools -->
             </div>
             <!-- /.box-header -->
-            
+
             <div class="box-body">
-			
+
 			<!-- form -->
-			
-			<form role="form" method="post" enctype="multipart/form-data" action="bilgisayarlar-ekle.php">
+
+			<form role="form" method="post" enctype="multipart/form-data" action="computers-add.php">
               <div class="box-body">
                 <div class="form-group">
 					<div class="col-md-3">
-						<input name="marka" type="text" id="marka" class="form-control"  placeholder="Marka Girin">
+						<input name="manufacturer" type="text" id="manufacturer" class="form-control"  placeholder="<?=$lang["Enter_Manufactypeer"];?>">
 					</div>
 					<div class="col-md-3">
-						<input name="model" type="text" id="model" class="form-control"  placeholder="Model Girin">
+						<input name="model" type="text" id="model" class="form-control"  placeholder="<?=$lang["Enter_Model"];?>">
 					</div>
 					<div class="col-md-4">
-						<input name="serino" type="text" id="serino" class="form-control" placeholder="Seri No Girin">
+						<input name="serialNo" type="text" id="serialNo" class="form-control" placeholder="<?=$lang["Enter_Serial_Number"];?>">
 					</div>
 					<div class="col-md-1">
-						<button type="submit" class="btn btn-primary">Bilgisayarı Ekle</button>
+						<button type="submit" class="btn btn-primary"><?=$lang["Add_the_Computer"];?></button>
 					</div>
 				</div>
               </div>
@@ -75,13 +75,13 @@ document.getElementById("bilgisayarlar").className = "active";
 
             </form>
 			<!-- /.form -->
-			
+
             </div>
             <!-- /.box-body -->
           </div>
           <!-- /.box -->
         </div>
-		
+
             </div>
 			<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModal">
 			  <div class="modal-dialog modal-sm" role="document">
@@ -95,58 +95,58 @@ document.getElementById("bilgisayarlar").className = "active";
               <table id="example1" class="table table-bordered table-striped">
                 <thead>
 				  <tr>
-					<th>Marka</th>
-					<th>Model</th>
-					<th>Seri No</th>
-					<th>Durum</th>
-					<th>İşlemler</th>
+					<th><?=$lang["Manufacturer"];?></th>
+					<th><?=$lang["Model"];?></th>
+					<th><?=$lang["Serial_Number"];?></th>
+					<th><?=$lang["Status"];?></th>
+					<th><?=$lang["Operations"];?></th>
 				  </tr>
 				</thead>
 
 				<tbody>
 					<?php
-					$vericek=$connection->query("select * from bilgisayarlar")->fetchAll(PDO::FETCH_ASSOC);
-					foreach ($vericek as $vcek)
+					$pullComputer=$connection->query("select * from computers")->fetchAll(PDO::FETCH_ASSOC);
+					foreach ($pullComputer as $pulledComputer)
 					{
 					?>
 				  <tr>
-					<td><?=$vcek['marka'];?></td>
-					<td><?=$vcek['model'];?></td>
-					<td><?=$vcek['serino'];?></td>
+					<td><?=$pulledComputer['manufacturer'];?></td>
+					<td><?=$pulledComputer['model'];?></td>
+					<td><?=$pulledComputer['serialNo'];?></td>
 					<td>
 					<div class="box box-default collapsed-box" style="border:1px solid #00a65a;">
 						<div class="box-header with-border">
-						  <h4 class="box-title"><?php if($vcek['durum']=='0')echo'Dolapta'; else echo'Ödünç Verildi';?></h4>
+						  <h4 class="box-title"><?php if($pulledComputer['status']=='0')echo $lang["In_inventory"]; else echo $lang["Lent"];?></h4>
 						  <div class="box-tools">
 							<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
 							</button>
-						  </div> 
+						  </div>
 						</div>
 						<div class="box-body">
 							<?php
-							if($vcek['durum']=='1')
+							if($pulledComputer['status']=='1')
 							{
-								$id=$vcek['id'];
-								$odunccek=$connection->query("select * from oduncler where tur='Bilgisayar' AND urunid='$id' AND iadealan=''")->fetchAll(PDO::FETCH_ASSOC);
-								foreach ($odunccek as $ocek)
+								$computerId=$pulledComputer['computerId'];
+								$pullLoan=$connection->query("select * from loans where type='2' AND productId='$computerId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
+								foreach ($pullLoan as $pulledLoan)
 								{
-									echo 'Bu '.$ocek['tur'].', '.$ocek['odunctarihi'].' tarihinde ';
-									
-									$percek=$connection->query("select * from personel where id=".$ocek['oduncalan']."")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($percek as $pcek)
+									echo 'Bu '.$pulledLoan['type'].', '.$pulledLoan['loanDate'].' tarihinde ';
+
+									$pullPersonnel=$connection->query("select * from personnel where personnelId=".$pulledLoan['loanerId']."")->fetchAll(PDO::FETCH_ASSOC);
+									foreach ($pullPersonnel as $pulledPersonnel)
 									{
-									echo $pcek['adsoyad'];
+									echo $pulledPersonnel['nameSurname'];
 									}
 									echo ' tarafından ';
-									$percek2=$connection->query("select * from personel where id=".$ocek['oduncalan']."")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($percek2 as $pcek2)
+									$pullPersonnel2=$connection->query("select * from personnel where personnelId=".$pulledLoan['loanerId']."")->fetchAll(PDO::FETCH_ASSOC);
+									foreach ($pullPersonnel2 as $pulledPersonnel2)
 									{
-									echo $pcek2['adsoyad'];
+									echo $pulledPersonnel2['nameSurname'];
 									}
 									echo ' adlı personele emanet edilmiştir.';
-									if ($ocek['iadetarihi']!="0000-00-00") 
+									if ($pulledLoan['returnDate']!="0000-00-00")
 									{
-									//echo $ocek['iadetarihi'].' tarihinde, '.$ocek['iadealan'].' tarafından iade alınmıştır.';
+									//echo $pulledLoan['returnDate'].' tarihinde, '.$pulledLoan['returnAccepterId'].' tarafından iade alınmıştır.';
 									}
 									else echo 'Bu bilgisayar henüz iade alınmamıştır.';
 								}
@@ -155,38 +155,38 @@ document.getElementById("bilgisayarlar").className = "active";
 						</div>
 					</div>
 					</td>
-					
+
 					<!-- Small modal -->
 					<div class="modal fade bs-example-modal-lg" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 					  <div class="modal-dialog" role="document">
 						<div class="modal-content">
-							<form role="form" method="post" enctype="multipart/form-data" action="bilgisayarlar-duzenle.php">
+							<form role="form" method="post" enctype="multipart/form-data" action="computers-edit.php">
 							  <div class="modal-header">
 								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-								<h4 class="modal-title" id="myModalLabel">Bilgisayar Düzenle</h4>
+								<h4 class="modal-title" id="myModalLabel"><?=$lang["Edit_Computer"];?></h4>
 							  </div>
 							  <div class="modal-body">
 								<div class="form-group">
 									<div class="col-md-3">
-									<label>Marka</label>
-										<input name="marka" type="text" id="marka" class="form-control"  placeholder="Marka Girin" value="<?=$vcek['marka'];?>">
-										<input name="id" type="text" id="id" hidden="hidden" value="<?=$vcek['id'];?>">
+									<label><?=$lang["Manufacturer"];?></label>
+										<input name="manufacturer" type="text" id="manufacturer" class="form-control"  placeholder="<?=$lang["Enter_Manufactypeer"];?>" value="<?=$pulledComputer['manufacturer'];?>">
+										<input name="computerId" type="text" id="computerId" hidden="hidden" value="<?=$pulledComputer['computerId'];?>">
 									</div>
-									
+
 									<div class="col-md-3">
-									<label>Model</label>
-										<input name="model" type="text" id="model" class="form-control"  placeholder="Model Girin" value="<?=$vcek['model'];?>">
+									<label><?=$lang["Model"];?></label>
+										<input name="model" type="text" id="model" class="form-control"  placeholder="<?=$lang["Enter_Model"];?>" value="<?=$pulledComputer['model'];?>">
 									</div>
-									
+
 									<div class="col-md-4">
-									<label>Seri No</label>
-										<input name="serino" type="text" id="serino" class="form-control" placeholder="Seri No Girin" value="<?=$vcek['serino'];?>">
+									<label><?=$lang["Serial_Number"];?></label>
+										<input name="serialNo" type="text" id="serialNo" class="form-control" placeholder="<?=$lang["Enter_Serial_Number"];?>" value="<?=$pulledComputer['serialNo'];?>">
 									</div>
 								</div>
 							  </div>
 							  <div class="modal-footer">
-								<button type="button" class="btn btn-default" data-dismiss="modal">Kapat</button>
-								<button type="submit" class="btn btn-warning">Kaydet</button>
+								<button type="button" class="btn btn-default" data-dismiss="modal"><?=$lang["Cancel"];?></button>
+								<button type="submit" class="btn btn-warning"><?=$lang["Save"];?></button>
 							  </div>
 							</form>
 						</div>
@@ -195,7 +195,7 @@ document.getElementById("bilgisayarlar").className = "active";
 					<td>
 					  <span class="button-group">
 						<button type="button" class="btn btn-warning fa fa-pencil" data-toggle="modal" data-target="#myModal"></button>
-						<a href="bilgisayarlar-sil.php?id=<?=$vcek['id'];?>" onclick="return confirm('İçeriği silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve bu bilgisayara ait ödünç bilgileri de silinecektir!');" class="fa fa-trash btn btn-danger"></a>
+						<a href="computer-delete.php?computerId=<?=$pulledComputer['computerId'];?>" onclick="return confirm('<?=$lang["Are_you_sure_to_delete"];?>');" class="fa fa-trash btn btn-danger"></a>
 					  </span>
 					</td>
 				  </tr>
@@ -245,7 +245,7 @@ document.getElementById("bilgisayarlar").className = "active";
 </script>
   <!-- PAGE CONTENT END -->
  <?php include("footer.php") ?>
- 
- 
- <!-- Giriş KONTROL -->         
+
+
+ <!-- Giriş KONTROL -->
 <?php	} ?>

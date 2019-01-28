@@ -1,8 +1,8 @@
 <?php
 session_start(); 
-if((!isset($_SESSION["login"]))||($_SESSION["yetki"]=="0")){
+if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 ?>
-<meta http-equiv="refresh" content="0;URL=giris.php">
+<meta http-equiv="refresh" content="0;URL=login.php">
 <?php
 } else
 {
@@ -10,23 +10,23 @@ if((!isset($_SESSION["login"]))||($_SESSION["yetki"]=="0")){
 
 <!-- Giriş KONTROL -->
 <?php include("header.php") ?>
-<?php include("kontrol/veritabani.php") ?>
+<?php include("database.php") ?>
 
 <!-- PAGE CONTENT -->
 
 
 <script>
-document.getElementById("anasayfa").className = "active";
+document.getElementById("homepage").className = "active";
 </script>
 <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
       <h1>
-        Kontrol Paneli
+        <?=$lang["Control_Panel"];?>
       </h1>
       <ol class="breadcrumb">
-        <li><a href="#"><i class="fa fa-dashboard"></i> Anasayfa</a></li>
+        <li><a href="#"><i class="fa fa-dashboard"></i> <?=$lang["Homepage"];?></a></li>
         
       </ol>
     </section>
@@ -37,11 +37,24 @@ document.getElementById("anasayfa").className = "active";
       <div class="row">
         <div class="col-lg-3 col-xs-6">
           <!-- small box -->
+          <div class="small-box bg-green">
+            <div class="inner">
+              <h3><?=$bookCount=$connection->query("select * from books")->rowCount();?><sup style="font-size: 20px"></sup></h3>
+
+              <p><?=$lang["Total_Books"];?></p>
+            </div>
+            <div class="icon">
+              <i class="ion ion-ios-book"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-xs-6">
+          <!-- small box -->
           <div class="small-box bg-red">
             <div class="inner">
-              <h3><?=$anahtarsay=$connection->query("select * from bilgisayarlar")->rowCount();?><sup style="font-size: 20px"></sup></h3>
+              <h3><?=$keyCount=$connection->query("select * from computers")->rowCount();?><sup style="font-size: 20px"></sup></h3>
 
-              <p>Toplam Anahtar</p>
+              <p><?=$lang["Total_Keys"];?></p>
             </div>
             <div class="icon">
               <i class="ion ion-key"></i>
@@ -52,25 +65,12 @@ document.getElementById("anasayfa").className = "active";
           <!-- small box -->
           <div class="small-box bg-blue">
             <div class="inner">
-              <h3><?=$bilgisayarsay=$connection->query("select * from bilgisayarlar")->rowCount();?><sup style="font-size: 20px"></sup></h3>
+              <h3><?=$computerCount=$connection->query("select * from computers")->rowCount();?><sup style="font-size: 20px"></sup></h3>
 
-              <p>Toplam Bilgisayar</p>
+              <p><?=$lang["Total_Computers"];?></p>
             </div>
             <div class="icon">
               <i class="ion ion-laptop"></i>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-xs-6">
-          <!-- small box -->
-          <div class="small-box bg-green">
-            <div class="inner">
-              <h3><?=$kitapsay=$connection->query("select * from kitaplar")->rowCount();?><sup style="font-size: 20px"></sup></h3>
-
-              <p>Toplam Kitap</p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-ios-book"></i>
             </div>
           </div>
         </div>
@@ -79,9 +79,9 @@ document.getElementById("anasayfa").className = "active";
           <!-- small box -->
           <div class="small-box bg-yellow">
             <div class="inner">
-              <h3><?=$personelsay=$connection->query("select * from personel")->rowCount();?></h3>
+              <h3><?=$personnelCount=$connection->query("select * from personnel")->rowCount();?></h3>
 
-              <p>Toplam Personel</p>
+              <p><?=$lang["Total_Personnel"];?></p>
             </div>
             <div class="icon">
               <i class="ion ion-person-add"></i>
