@@ -7,7 +7,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 } else
 {
 ?>
-<!-- GİRİŞ KONTROL -->
 <?php include("header.php") ?>
 <?php include("database.php") ?>
 <section id="content">
@@ -69,7 +68,6 @@ $loanId=$_GET['loanId'];
 
 
 ?>
-</section> </div>
-<!-- GİRİŞ KONTROL -->          
+</section> </div>          
 <?php include("footer.php"); ?>
 <?php	} ?>

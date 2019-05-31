@@ -5,6 +5,6 @@
     <strong>Copyright &copy; 2016 Muhammet Fatih Sağlam</strong> All rights
     reserved.
   </footer>
-<!-- ./wrapper -->
+
 </body>
 </html>

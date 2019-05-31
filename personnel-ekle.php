@@ -7,7 +7,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 } else
 {
 ?>
-<!-- GİRİŞ KONTROL -->
 <?php include("header.php") ?>
 <?php include("database.php") ?>
 
@@ -20,9 +19,9 @@ $passWord=$_POST['passWord'];
 $eMail=$_POST['eMail'];
 $phone=$_POST['phone'];
 $userName=$_POST['userName'];
-if(isset($_POST['auth'])) { // checkbox seçilmişse "on" değeri gönderiliyor
+if(isset($_POST['auth']) && $_POST['auth']=="on") { 
     $auth=1;
-} else { // seçilmemişse bu değer sayfaya hiç gönderilmiyor
+} else { 
     $auth=0;
 }
 $situation=$connection->query("insert into personnel  (userName,passWord,eMail,phone];?>,nameSurname,auth) values ('$userName','$passWord','$eMail','$phone','$nameSurname','$auth')") or die ($lang["Something_bad_happened"]);
@@ -39,7 +38,6 @@ echo"$status";
 
 ?>
 
-</section>
-<!-- GİRİŞ KONTROL -->          
+</section>          
 <?php include("footer.php"); ?>
 <?php	} ?>

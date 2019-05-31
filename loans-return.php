@@ -7,7 +7,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 } else
 {
 ?>
-<!-- GİRİŞ KONTROL -->
 <?php include("header.php") ?>
 <?php include("database.php") ?>
 
@@ -77,7 +76,6 @@ echo"$status";
 
 ?>
 
-</section>
-<!-- GİRİŞ KONTROL -->          
+</section>          
 <?php include("footer.php"); ?>
 <?php	} ?>

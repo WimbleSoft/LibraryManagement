@@ -7,7 +7,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 } else
 {
 ?>
-<!-- GİRİŞ KONTROL -->
 <?php include("header.php") ?>
 <?php include("database.php") ?>
 
@@ -31,6 +30,5 @@ echo" <meta http-equiv=\"refresh\" content=\"0;url=keys.php\"> ";
 
 </section>
 
-<!-- GİRİŞ KONTROL -->
 <?php include("footer.php"); ?>
 <?php	} ?>

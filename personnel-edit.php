@@ -8,16 +8,16 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 {
 ?>
 
-<!-- Giriş KONTROL -->
+
 <?php include("header.php") ?>
 <?php include("database.php") ?>
 
-<!-- PAGE CONTENT -->
+
 
 <?php $personelid=$_GET["id"];?>
-  <!-- Content Wrapper. Contains page content -->
+
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
+
     <section class="content-header">
       <h1>
         <?=$lang["Settings"];?>
@@ -29,7 +29,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
       </ol>
     </section>
 
-    <!-- Main content -->
     <section class="content">
       <div class="row">
         <div class="col-xs-12">
@@ -37,7 +36,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
             <div class="box-header">
               <h3 class="box-title"><?=$lang["Personnel_Edit_Panel"];?></h3>
             </div>
-            <!-- /.box-header -->
+            
             <div class="box-body">
 			<?php
 				$pullPersonnel=$connection->query("select * from personnel where personnelId='$personelid'")->fetchAll(PDO::FETCH_ASSOC);
@@ -82,21 +81,21 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 			 <?php } ?>
 				
             </div>
-            <!-- /.box-body -->
+            
           </div>
-          <!-- /.box -->
+          
         </div>
-        <!-- /.col -->
+        
       </div>
-      <!-- /.row -->
+      
     </section>
-    <!-- /.content -->
+    
   </div>
-  <!-- /.content-wrapper -->
   
-  <!-- PAGE CONTENT END -->
+  
+  
  <?php include("footer.php") ?>
  
  
- <!-- Giriş KONTROL -->         
+ 
 <?php	} ?>

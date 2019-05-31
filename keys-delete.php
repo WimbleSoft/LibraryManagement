@@ -7,7 +7,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 } else
 {
 ?>
-<!-- GİRİŞ KONTROL -->
 
 <?php include("database.php") ?>
 <section id="content">
@@ -24,6 +23,5 @@ $status="<h2>".$lang["Record_couldnt_Deleted"]."</h2>";
 echo"$status";
 echo" <meta http-equiv=\"refresh\" content=\"0;url=keys.php\"> ";
 ?>
-</section> </div>
-<!-- GİRİŞ KONTROL -->          
+</section> </div>          
 <?php	} ?>

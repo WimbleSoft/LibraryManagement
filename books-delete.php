@@ -8,7 +8,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 else
 {
 ?>
-<!-- GİRİŞ KONTROL -->
 
 <?php include("database.php") ?>
 <section id="content">
@@ -28,6 +27,5 @@ else
     echo    "$status";
     echo    " <meta http-equiv=\"refresh\" content=\"0;url=books.php\"> ";
 ?>
-</section> </div>
-<!-- GİRİŞ KONTROL -->          
+</section> </div>          
 <?php	} ?>
