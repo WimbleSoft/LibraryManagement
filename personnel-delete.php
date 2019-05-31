@@ -21,7 +21,6 @@ $status="<h2>".$lang["Record_Deleted"]."</h2>";
 }else{
 $status="<h2>".$lang["Record_couldnt_Deleted"]."</h2>";
 }
-<?php
 echo"$status";
 echo " <meta http-equiv=\"refresh\" content=\"0;url=personnel.php\"> ";
 ?>

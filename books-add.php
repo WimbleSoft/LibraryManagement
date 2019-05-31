@@ -24,7 +24,7 @@ $situation=$connection->query("insert into books  (bookName,bookWriter,status) v
 if($situation){
 	$status="<h2>".$lang["Process_Successful"]."</h2>";
 }else{
-	$status="<h2>Hiç veri girmediniz..</h2>";
+	$status="<h2>".$lang["Process_Failed"]."</h2>";
 	}
 echo"$status";
 		

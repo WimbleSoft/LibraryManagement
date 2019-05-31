@@ -321,7 +321,7 @@ document.getElementById("loans").className = "active";
 						echo $pulledComputer['manufacturer'].' '.$pulledComputer['model'];
 						}
 					}
-					else if($pulledData['type']==3")
+					else if($pulledData['type']==3)
 					{
 						$pullKey=$connection->query("select * from keys where keyId=".$pulledData['loanId']."")->fetchAll(PDO::FETCH_ASSOC);
 						foreach ($pullKey as $pulledKey)
