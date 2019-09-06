@@ -116,7 +116,7 @@ document.getElementById("books").className = "active";
 							if($pulledBook['bookStatus']=='1')
 							{
 								$bookId=$pulledBook['bookId'];
-								$pullLoan=$connection->query("select * from loans where type='1' AND productId='$bookId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
+								$pullLoan=$connection->query("select * from loans where type='0' AND productId='$bookId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
 								foreach ($pullLoan as $pulledLoan)
 								{
 									echo 'Bu '.$pulledLoan['type'].', '.$pulledLoan['loanDate'].' tarihinde ';

@@ -13,7 +13,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 <?php
 $keyId=$_GET['keyId'];
 $delete = $connection->query("DELETE from roomkeys WHERE keyId='$keyId' ") or die("HATA!");
-$delete2 = $connection->query("DELETE from loans WHERE productId='$keyId' and type='3'") or die("HATA!");
+$delete2 = $connection->query("DELETE from loans WHERE productId='$keyId' and type='2'") or die("HATA!");
 
 if($delete){
 $status="<h2>".$lang["Record_Deleted"]."</h2>";

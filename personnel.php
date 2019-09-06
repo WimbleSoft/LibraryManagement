@@ -141,26 +141,26 @@
 								</tr>
 							</thead>
 							<tbody>
-								<?php
-									$pullData=$connection->query("select * from personnel")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($pullData as $pulledData)
-									{
-									?>
-                    <tr>
-                      <td><?=$pulledData['nameSurname'];?></td>
-                      <td><?=$pulledData['userName'];?></td>
-                      <td><?=$pulledData['eMail'];?></td>
-                      <td><?=$pulledData['phone'];?></td>
-                      <td>
-                        <span class="button-group">
-                        <a href="#" data-target="personnelEdit_<?=$pulledData['personnelId'];?>" date-toggle="modal" class="fa fa-pencil"></a>
-                        <a href="personnel.php?action=delete&personnelId=<?=$pulledData['personnelId'];?>" onclick="return confirm('<?=$lang['Are_you_sure_to_delete'];?>');" class="fa fa-trash"></a>
-                        </span>
-                      </td>
-                    </tr>
-                <?php 
-                  }
-                  ?>
+							<?php
+								$pullData=$connection->query("select * from personnel")->fetchAll(PDO::FETCH_ASSOC);
+								foreach ($pullData as $pulledData)
+								{
+								?>
+								<tr>
+									<td><?=$pulledData['nameSurname'];?></td>
+									<td><?=$pulledData['userName'];?></td>
+									<td><?=$pulledData['eMail'];?></td>
+									<td><?=$pulledData['phone'];?></td>
+									<td>
+										<span class="button-group">
+										<a href="#" data-target="personnelEdit_<?=$pulledData['personnelId'];?>" date-toggle="modal" class="fa fa-pencil"></a>
+										<a href="personnel.php?action=delete&personnelId=<?=$pulledData['personnelId'];?>" onclick="return confirm('<?=$lang['Are_you_sure_to_delete'];?>');" class="fa fa-trash"></a>
+										</span>
+									</td>
+								</tr>
+							<?php 
+							}
+							?>
 							</tbody>
 						</table>
 					</div>

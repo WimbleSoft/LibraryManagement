@@ -16,7 +16,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 $keyContent=$_POST['keyContent'];
 $keyNumber=$_POST['keyNumber'];
 
-$situation=$connection->query("insert into roomkeys  (keyContent,keyNumber,keyStatus) values ('$keyContent','$keyNumber','0')") or die ("bir hata olustu...");
+$situation=$connection->query("insert into roomkeys  (keyContent,keyNumber,keyStatus) values ('$keyContent','$keyNumber','2')") or die ("bir hata olustu...");
 
 
 if($situation){

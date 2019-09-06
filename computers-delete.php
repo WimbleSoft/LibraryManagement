@@ -13,7 +13,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 <?php
 $computerId=$_GET['computerId'];
 $delete = $connection->query("DELETE from computers WHERE computerId='$computerId'") or die("HATA!");
-$delete2 = $connection->query("DELETE from loans WHERE productId='$computerId' and type='2'") or die("HATA!");
+$delete2 = $connection->query("DELETE from loans WHERE productId='$computerId' and type='1'") or die("HATA!");
 
 if($delete)
 {

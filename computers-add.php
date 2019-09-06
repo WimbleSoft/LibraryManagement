@@ -17,7 +17,7 @@ $manufacturer=$_POST['manufacturer'];
 $model=$_POST['model'];
 $serialNo=$_POST['serialNo'];
 
-$situation=$connection->query("insert into computers  (manufacturer,model,serialNo,status) values ('$manufacturer','$model','$serialNo','0')") or die ("bir hata olustu...");
+$situation=$connection->query("insert into computers  (manufacturer,model,serialNo,computerStatus) values ('$manufacturer','$model','$serialNo','0')") or die ("bir hata olustu...");
 
 
 if($situation){

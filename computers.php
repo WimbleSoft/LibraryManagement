@@ -125,7 +125,7 @@ document.getElementById("computers").className = "active";
 							if($pulledComputer['computerStatus']=='1')
 							{
 								$computerId=$pulledComputer['computerId'];
-								$pullLoan=$connection->query("select * from loans where type='2' AND productId='$computerId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
+								$pullLoan=$connection->query("select * from loans where type='1' AND productId='$computerId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
 								foreach ($pullLoan as $pulledLoan)
 								{
 									echo 'Bu '.$pulledLoan['type'].', '.$pulledLoan['loanDate'].' tarihinde ';

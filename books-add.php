@@ -14,7 +14,7 @@ else
 <?php
     $bookName   = $_POST['bookName'];
     $bookWriter = $_POST['bookWriter'];
-    $situation = $connection->query("insert into books  (bookName,bookWriter,status) values ('$bookName','$bookWriter','0')") or die($lang["Something_bad_happened"]);
+    $situation = $connection->query("insert into books  (bookName,bookWriter,bookStatus) values ('$bookName','$bookWriter','0')") or die($lang["Something_bad_happened"]);
     if ($situation)
     {
         $status = "<h2>" . $lang["Process_Successful"] . "</h2>";
