@@ -10,7 +10,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 
 
 <?php include("header.php") ?>
-<?php include("database.php") ?>
 
 
 
@@ -57,7 +56,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 							<input name="eMail" type="text" id="eMail" class="form-control" placeholder="<?=$lang["Enter_eMail"];?>" value="<?=$pulledPersonnel['eMail'];?>">
 						</div>
 						<div class="col-md-1">
-							<input name="userName" type="text" id="userName" class="form-control" placeholder="<?=$lang["User_Name"];?> Girin" value="<?=$pulledPersonnel['userName'];?>">
+							<input name="userName" type="text" id="userName" class="form-control" placeholder="<?=$lang["Enter_UserName"];?>" value="<?=$pulledPersonnel['userName'];?>">
 						</div>
 						<div class="col-md-2">
 							<input name="passWord" type="password" id="passWord" class="form-control" min-lenght="4" placeholder="<?=$lang["If_you_dont_enter_password_doesnt_change"];?>">

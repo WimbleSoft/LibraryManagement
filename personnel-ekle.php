@@ -8,7 +8,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 {
 ?>
 <?php include("header.php") ?>
-<?php include("database.php") ?>
 
 
 <section id="content">

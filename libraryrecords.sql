@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.7.4
+-- version 4.8.5
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1:3306
--- Generation Time: Jan 28, 2019 at 09:19 AM
--- Server version: 5.7.19
--- PHP Version: 5.6.31
+-- Anamakine: 127.0.0.1:3306
+-- Üretim Zamanı: 06 Eyl 2019, 08:11:51
+-- Sunucu sürümü: 5.7.26
+-- PHP Sürümü: 7.2.18
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -19,13 +19,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `libraryrecords`
+-- Veritabanı: `libraryrecords`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `books`
+-- Tablo için tablo yapısı `books`
 --
 
 DROP TABLE IF EXISTS `books`;
@@ -38,16 +38,16 @@ CREATE TABLE IF NOT EXISTS `books` (
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `books`
+-- Tablo döküm verisi `books`
 --
 
 INSERT INTO `books` (`bookId`, `bookName`, `bookWriter`, `bookStatus`) VALUES
-(4, 'Mass Effect - Keşif1', 'Drew Karpyshyn2', 0);
+(4, 'Mass Effect - Keşif1', 'Drew Karpyshyn', 0);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `computers`
+-- Tablo için tablo yapısı `computers`
 --
 
 DROP TABLE IF EXISTS `computers`;
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `computers` (
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `computers`
+-- Tablo döküm verisi `computers`
 --
 
 INSERT INTO `computers` (`computerId`, `manufacturer`, `model`, `serialNo`, `computerStatus`) VALUES
@@ -70,29 +70,7 @@ INSERT INTO `computers` (`computerId`, `manufacturer`, `model`, `serialNo`, `com
 -- --------------------------------------------------------
 
 --
--- Table structure for table `keys`
---
-
-DROP TABLE IF EXISTS `keys`;
-CREATE TABLE IF NOT EXISTS `keys` (
-  `keyId` int(11) NOT NULL AUTO_INCREMENT,
-  `keyNumber` varchar(20) NOT NULL,
-  `keyContent` text NOT NULL,
-  `keyStatus` int(11) NOT NULL,
-  PRIMARY KEY (`keyId`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `keys`
---
-
-INSERT INTO `keys` (`keyId`, `keyNumber`, `keyContent`, `keyStatus`) VALUES
-(4, '12456213', 'Salon Anahtarıs', 0);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `loans`
+-- Tablo için tablo yapısı `loans`
 --
 
 DROP TABLE IF EXISTS `loans`;
@@ -109,16 +87,16 @@ CREATE TABLE IF NOT EXISTS `loans` (
 ) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `loans`
+-- Tablo döküm verisi `loans`
 --
 
 INSERT INTO `loans` (`loanId`, `productId`, `type`, `loanDate`, `lenderId`, `loanerId`, `returnDate`, `returnAccepterId`) VALUES
-(34, 7, 'Bilgisayar', '2016-09-06', 1, '1', '2019-01-09', 1);
+(34, 7, 'Bilgisayar', '2016-09-06', 1, '1', '2019-09-06', 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `personnel`
+-- Tablo için tablo yapısı `personnel`
 --
 
 DROP TABLE IF EXISTS `personnel`;
@@ -134,12 +112,34 @@ CREATE TABLE IF NOT EXISTS `personnel` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `personnel`
+-- Tablo döküm verisi `personnel`
 --
 
 INSERT INTO `personnel` (`personnelId`, `userName`, `nameSurname`, `passWord`, `eMail`, `phone`, `auth`) VALUES
 (1, 'fatik', 'Fatih Sağlam', '81dc9bdb52d04dc20036dbd8313ed055', 'silentwimble@hotmail.com', '5422121727', '1'),
 (2, 'asdasd', 'Ali Çatalbaş', '81dc9bdb52d04dc20036dbd8313ed055', 'asdasd@gmail.com', '456512215', '1');
+
+-- --------------------------------------------------------
+
+--
+-- Tablo için tablo yapısı `roomkeys`
+--
+
+DROP TABLE IF EXISTS `roomkeys`;
+CREATE TABLE IF NOT EXISTS `roomkeys` (
+  `keyId` int(11) NOT NULL AUTO_INCREMENT,
+  `keyNumber` varchar(20) NOT NULL,
+  `keyContent` text NOT NULL,
+  `keyStatus` int(11) NOT NULL,
+  PRIMARY KEY (`keyId`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+--
+-- Tablo döküm verisi `roomkeys`
+--
+
+INSERT INTO `roomkeys` (`keyId`, `keyNumber`, `keyContent`, `keyStatus`) VALUES
+(4, '12456213', 'Salon Anahtarıs', 0);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

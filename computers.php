@@ -10,7 +10,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 
 
 <?php include("header.php") ?>
-<?php include("database.php") ?>
 
 
 <script>
@@ -57,7 +56,7 @@ document.getElementById("computers").className = "active";
               <div class="box-body">
                 <div class="form-group">
 					<div class="col-md-3">
-						<input name="manufacturer" type="text" id="manufacturer" class="form-control"  placeholder="<?=$lang["Enter_Manufactypeer"];?>">
+						<input name="manufacturer" type="text" id="manufacturer" class="form-control"  placeholder="<?=$lang["Enter_Manufacturer"];?>">
 					</div>
 					<div class="col-md-3">
 						<input name="model" type="text" id="model" class="form-control"  placeholder="<?=$lang["Enter_Model"];?>">
@@ -115,7 +114,7 @@ document.getElementById("computers").className = "active";
 					<td>
 					<div class="box box-default collapsed-box" style="border:1px solid #00a65a;">
 						<div class="box-header with-border">
-						  <h4 class="box-title"><?php if($pulledComputer['status']=='0')echo $lang["In_inventory"]; else echo $lang["Lent"];?></h4>
+						  <h4 class="box-title"><?php if($pulledComputer['computerStatus']=='0')echo $lang["In_inventory"]; else echo $lang["Lent"];?></h4>
 						  <div class="box-tools">
 							<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
 							</button>
@@ -123,7 +122,7 @@ document.getElementById("computers").className = "active";
 						</div>
 						<div class="box-body">
 							<?php
-							if($pulledComputer['status']=='1')
+							if($pulledComputer['computerStatus']=='1')
 							{
 								$computerId=$pulledComputer['computerId'];
 								$pullLoan=$connection->query("select * from loans where type='2' AND productId='$computerId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
@@ -168,7 +167,7 @@ document.getElementById("computers").className = "active";
 								<div class="form-group">
 									<div class="col-md-3">
 									<label><?=$lang["Manufacturer"];?></label>
-										<input name="manufacturer" type="text" id="manufacturer" class="form-control"  placeholder="<?=$lang["Enter_Manufactypeer"];?>" value="<?=$pulledComputer['manufacturer'];?>">
+										<input name="manufacturer" type="text" id="manufacturer" class="form-control"  placeholder="<?=$lang["Enter_Manufacturer"];?>" value="<?=$pulledComputer['manufacturer'];?>">
 										<input name="computerId" type="text" id="computerId" hidden="hidden" value="<?=$pulledComputer['computerId'];?>">
 									</div>
 

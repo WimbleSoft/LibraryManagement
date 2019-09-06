@@ -1,8 +1,8 @@
  <footer class="main-footer">
     <div class="pull-right hidden-xs">
-      <b>Version</b> 2.3.6
+      <b>Version</b> 1.0.0
     </div>
-    <strong>Copyright &copy; 2016 Muhammet Fatih Sağlam</strong> All rights
+    <strong>Copyright &copy; <?=date('Y');?> Muhammet Fatih Sağlam</strong> All rights
     reserved.
   </footer>
 

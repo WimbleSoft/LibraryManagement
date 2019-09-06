@@ -8,7 +8,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 {
 ?>
 <?php include("header.php") ?>
-<?php include("database.php") ?>
 
 
 <section id="content">
@@ -18,7 +17,7 @@ $productId=$_GET['productId'];
 $type=$_GET['type'];
 $loanId=$_GET['loanId'];
 
-$situation=$connection->query("UPDATE loans set returnAccepterId='".$_SESSION['enteredPersonId']."',returnDate='".date("Y-m-d")."' where loanId='$loanId'") or die ($lang["Something_bad_happened"]);
+$situation=$connection->query("UPDATE loans set returnAccepterId='".$_SESSION['personnelId']."',returnDate='".date("Y-m-d")."' where loanId='$loanId'") or die ($lang["Something_bad_happened"]);
 
 if($type==1){
 	$pullBook=$connection->query("select * from books where bookId='$productId' ")->fetchAll(PDO::FETCH_ASSOC);
@@ -49,12 +48,12 @@ if($type==2){
 	}
 }
 if($type==3){
-	$pullKey=$connection->query("select * from keys where keyId='$productId'")->fetchAll(PDO::FETCH_ASSOC);
+	$pullKey=$connection->query("select * from roomkeys where keyId='$productId'")->fetchAll(PDO::FETCH_ASSOC);
 	foreach ($pullKey as $pulledKey)
 	{
 		if($pulledKey['status']=='1')
 		{
-		$situation2=$connection->query("UPDATE keys set status='0' where keyId='$productId'") or die ($lang["Something_bad_happened"]);
+		$situation2=$connection->query("UPDATE roomkeys set status='0' where keyId='$productId'") or die ($lang["Something_bad_happened"]);
 		}
 		else
 		{

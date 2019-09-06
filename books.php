@@ -10,11 +10,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 
 
 <?php include("header.php") ?>
-<?php include("database.php") ?>
-
-
-
-
 <script>
 document.getElementById("books").className = "active";
 </script>
@@ -42,7 +37,7 @@ document.getElementById("books").className = "active";
         <div class="col-md-6">
           <div class="box box-default collapsed-box">
             <div class="box-header with-border">
-              <h3 class="box-title"><?=$lang["Add_a_Book"];?></h3>
+              <h3 class="box-title"><?=$lang["Add_New_Book"];?></h3>
 
               <div class="box-tools">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
@@ -110,7 +105,7 @@ document.getElementById("books").className = "active";
 					<td>
 					<div class="box box-default collapsed-box" style="border:1px solid #00a65a;">
 						<div class="box-header with-border">
-						  <h4 class="box-title"><?php if($pulledBook['status']=='0')echo $lang["In_inventory"]; else echo $lang["Lent"];?></h4>
+						  <h4 class="box-title"><?php if($pulledBook['bookStatus']=='0')echo $lang["In_Inventory"]; else echo $lang["Lent"];?></h4>
 						  <div class="box-tools">
 							<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
 							</button>
@@ -118,7 +113,7 @@ document.getElementById("books").className = "active";
 						</div>
 						<div class="box-body">
 							<?php
-							if($pulledBook['status']=='1')
+							if($pulledBook['bookStatus']=='1')
 							{
 								$bookId=$pulledBook['bookId'];
 								$pullLoan=$connection->query("select * from loans where type='1' AND productId='$bookId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
@@ -164,13 +159,13 @@ document.getElementById("books").className = "active";
 								<div class="form-group">
 									<div class="col-md-6">
 									<label><?=$lang["Book_Name"];?></label>
-										<input name="bookName" type="text" id="bookName" class="form-control"  placeholder="<?=$lang["Book_Name"];?> Girin" value="<?=$pulledBook['bookName'];?>">
+										<input name="bookName" type="text" id="bookName" class="form-control"  placeholder="<?=$lang["Book_Name"];?>" value="<?=$pulledBook['bookName'];?>">
 										<input name="bookId" type="text" id="bookId" hidden="hidden" value="<?=$pulledBook['bookId'];?>">
 									</div>
 									
 									<div class="col-md-6">
-									<label><?=$lang["Book"];?> <?=$lang["Writer"];?></label>
-										<input name="bookWriter" type="text" id="bookWriter" class="form-control"  placeholder="-<?=$lang["Book"];?> <?=$lang["Writer"];?>nı Girin" value="<?=$pulledBook['bookWriter'];?>">
+									<label><?=$lang["Book_Writer"];?></label>
+										<input name="bookWriter" type="text" id="bookWriter" class="form-control"  placeholder="<?=$lang["Enter_Book_Writer"];?>" value="<?=$pulledBook['bookWriter'];?>">
 									</div>
 									
 								</div>

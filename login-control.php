@@ -16,8 +16,11 @@ include("database.php");
 		
 			foreach ($query as $pulledData)
 			{
+			$_SESSION["auth"] = $pulledData['auth'];
 			$_SESSION["userName"] = $pulledData['userName'];
 			$_SESSION["personnelId"] = $pulledData['personnelId'];
+			$_SESSION["enteredPerson"] = $pulledData['nameSurname'];
+			$_SESSION["enteredPersonEmail"] = $pulledData['eMail'];
 			}
 			
 			@header ("Location: index.php");

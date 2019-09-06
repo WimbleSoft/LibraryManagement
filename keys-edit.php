@@ -8,7 +8,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 {
 ?>
 <?php include("header.php") ?>
-<?php include("database.php") ?>
 
 <section id="content">
 <?php
@@ -16,7 +15,7 @@ $keyId=$_POST['keyId'];
 $keyNumber=$_POST['keyNumber'];
 $keyContent=$_POST['keyContent'];
 
-$situation=$connection->query("UPDATE keys set keyNumber='$keyNumber',keyContent='$keyContent' where keyId='$keyId'") or die ($lang["Something_happened_bad"]);
+$situation=$connection->query("UPDATE roomkeys set keyNumber='$keyNumber',keyContent='$keyContent' where keyId='$keyId'") or die ($lang["Something_happened_bad"]);
 
 
 if($situation){

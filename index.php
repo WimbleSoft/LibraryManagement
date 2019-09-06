@@ -7,14 +7,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 } else
 {
 ?>
-
-
 <?php include("header.php") ?>
-<?php include("database.php") ?>
-
-
-
-
 <script>
 document.getElementById("homepage").className = "active";
 </script>

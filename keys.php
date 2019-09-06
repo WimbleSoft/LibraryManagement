@@ -7,13 +7,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 } else
 {
 ?>
-
-
 <?php include("header.php") ?>
-<?php include("database.php") ?>
-
-
-
 <script>
 document.getElementById("keys").className = "active";
 </script>
@@ -56,10 +50,10 @@ document.getElementById("keys").className = "active";
 					  <div class="box-body">
 						<div class="form-group">
 							<div class="col-md-5">
-								<input name="keyNumber" type="text"class="form-control" id="keyNumber" placeholder="<?=$lang["Enter_key_number"];?>">
+								<input name="keyNumber" type="text"class="form-control" id="keyNumber" placeholder="<?=$lang["Enter_Key_Number"];?>">
 							</div>
 							<div class="col-md-5">
-								<input name="keyContent" type="text" class="form-control" id="keyContent" placeholder="<?=$lang["Enter_key_content"];?>">
+								<input name="keyContent" type="text" class="form-control" id="keyContent" placeholder="<?=$lang["Enter_Key_Content"];?>">
 							</div>
 							<div class="col-md-2">
 								<button type="submit" class="btn btn-primary"><?=$lang["Add_the_Key"];?></button>
@@ -91,8 +85,9 @@ document.getElementById("keys").className = "active";
 
 								<tbody>
 									<?php
-									$pullKey=$connection->query("select * from keys")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($pullKey as $pulledKey)
+									$pullKey=$connection->prepare('select * from roomkeys');
+									$pullKey->execute();
+									foreach ($pullKey->fetchAll(PDO::FETCH_ASSOC) as $pulledKey)
 									{
 									?>
 									<tr>
@@ -101,7 +96,7 @@ document.getElementById("keys").className = "active";
 									<td>
 									<div class="box box-default collapsed-box" style="border:1px solid #00a65a;">
 										<div class="box-header with-border">
-											<h4 class="box-title"><?php if($pulledKey['keyStatus']=='0')echo $lang["In_inventory"]; else echo $lang["Lent"];?></h4>
+											<h4 class="box-title"><?php if($pulledKey['keyStatus']=='0')echo $lang["In_Inventory"]; else echo $lang["Lent"];?></h4>
 											<div class="box-tools">
 											<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
 											</button>
@@ -109,7 +104,7 @@ document.getElementById("keys").className = "active";
 										</div>
 										<div class="box-body">
 											<?php
-											if($pulledKey['status']=='1')
+											if($pulledKey['keyStatus']=='1')
 											{
 												$id=$pulledKey['keyId'];
 												$pullLoan=$connection->query("select * from loans where type='3' AND productId='$keyId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);

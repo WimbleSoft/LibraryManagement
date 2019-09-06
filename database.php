@@ -12,6 +12,12 @@ catch(PDOException $e)
 {
 echo "Connection failed: " . $e->getMessage();
 }
+if(isset($_GET["lang"]))
+{
+    $langName = $_GET["lang"];
+    $_SESSION["lang"] = $langName;
+}
+include("lang.php");
 ?>
 
 

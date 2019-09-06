@@ -8,8 +8,7 @@
 else
 { 
   include("header.php");
-  include("database.php");
-  $enteredPersonId=$_SESSION["enteredPersonId"];
+  $personnelId=$_SESSION["personnelId"];
   if(isset($_POST["update"]) && isset($_POST["bookId"]) && isset($_POST["nameSurname"]) && isset($_POST["eMail"]) && isset($_POST["userName"]) && isset($_POST["phone"])  )
   {
 
@@ -59,7 +58,7 @@ else
 					</div>
 					<div class="box-body">
 						<?php
-							$personnels=$connection->query("select * from personnel where personnelId='$enteredPersonId'")->fetchAll(PDO::FETCH_ASSOC);
+							$personnels=$connection->query("select * from personnel where personnelId='$personnelId'")->fetchAll(PDO::FETCH_ASSOC);
 							foreach ($personnels as $personnel)
 							{
 							?>
@@ -70,16 +69,16 @@ else
                         <input name="nameSurname" type="text" id="nameSurname" class="form-control"  placeholder="<?=$lang["Enter_Name_Surname"];?>" value="<?=$personnel['nameSurname'];?>">
                       </div>
                       <div class="col-md-2">
-                        <input name="phone" type="text" id="phone" class="form-control"  placeholder="<?=$lang["Enter_phone"];?>" value="<?=$personnel['phone'];?>">
+                        <input name="phone" type="text" id="phone" class="form-control"  placeholder="<?=$lang["Enter_Phone"];?>" value="<?=$personnel['phone'];?>">
                       </div>
                       <div class="col-md-2">
                         <input name="eMail" type="text" id="eMail" class="form-control" placeholder="<?=$lang["Enter_eMail"];?>" value="<?=$personnel['eMail'];?>">
                       </div>
                       <div class="col-md-2">
-                        <input name="userName" type="text" id="userName" class="form-control" placeholder="<?=$lang["Enter_userName"];?>" value="<?=$personnel['userName'];?>">
+                        <input name="userName" type="text" id="userName" class="form-control" placeholder="<?=$lang["Enter_Username"];?>" value="<?=$personnel['userName'];?>">
                       </div>
                       <div class="col-md-2">
-                        <input name="passWord" type="password" id="passWord" class="form-control" placeholder="<?=$lang["Enter_passWord"];?>" value="<?=$personnel['passWord'];?>">
+                        <input name="passWord" type="password" id="passWord" class="form-control" placeholder="<?=$lang["Enter_Password"];?>" value="<?=$personnel['passWord'];?>">
                       </div>
                       <div class="col-md-1"><button type="submit" name="update" class="btn btn-primary"><?=$lang["Save"];?></button></div>
                     </div>

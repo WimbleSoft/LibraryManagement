@@ -8,7 +8,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 {
 ?>
 <?php include("header.php") ?>
-<?php include("database.php") ?>
 
 
 <section id="content">
@@ -24,7 +23,7 @@ $loanerId=$_POST['loanerId'];
 $situation=$connection->query("insert into loans  (productId,type,loanDate,lenderId,loanerId) values ('$productId','$type','$loanDate','$lenderId','$loanerId')") or die ($lang["Something_bad_happened"]);
 if($type==1)
 {
-$situation3=$connection->query("UPDATE keys set status='1' where keyId='$productId'") or die ($lang["Something_bad_happened"]);
+$situation3=$connection->query("UPDATE roomkeys set status='1' where keyId='$productId'") or die ($lang["Something_bad_happened"]);
 }
 else if($type==2)
 {

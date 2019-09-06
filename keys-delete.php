@@ -12,7 +12,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 <section id="content">
 <?php
 $keyId=$_GET['keyId'];
-$delete = $connection->query("DELETE from keys WHERE keyId='$keyId' ") or die("HATA!");
+$delete = $connection->query("DELETE from roomkeys WHERE keyId='$keyId' ") or die("HATA!");
 $delete2 = $connection->query("DELETE from loans WHERE productId='$keyId' and type='3'") or die("HATA!");
 
 if($delete){

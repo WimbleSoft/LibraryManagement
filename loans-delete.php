@@ -8,7 +8,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 {
 ?>
 <?php include("header.php") ?>
-<?php include("database.php") ?>
 <section id="content">
 <?php
 $productId=$_GET['productId'];
@@ -48,12 +47,12 @@ $loanId=$_GET['loanId'];
 		}
 	}
 	if($type==3){
-		$pullKey=$connection->query("select * from keys where keyId='$productId'")->fetchAll(PDO::FETCH_ASSOC);
+		$pullKey=$connection->query("select * from roomkeys where keyId='$productId'")->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($pullKey as $pulledKey)
 		{
 			if($pulledKey['status']=='0')
 			{
-			$situation2=$connection->query("UPDATE keys set status='0' where keyId='$productId'") or die ($lang["Something_bad_happened"]);
+			$situation2=$connection->query("UPDATE roomkeys set status='0' where keyId='$productId'") or die ($lang["Something_bad_happened"]);
 			$delete = $connection->query("DELETE from loans WHERE loanId='$loanId'  AND type='$type'") or die($lang["Something_bad_happened"]);
 			echo" <meta http-equiv=\"refresh\" content=\"0;url=loans.php\"> ";
 			}

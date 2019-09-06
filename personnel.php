@@ -106,12 +106,12 @@
 													<input name="eMail" type="text" id="eMail" class="form-control" placeholder="<?=$lang["Enter_eMail"];?>">
 												</div>
 												<div class="col-md-1">
-													<input name="userName" type="text" id="userName" class="form-control" placeholder="<?=$lang["User_Name"];?> Girin">
+													<input name="userName" type="text" id="userName" class="form-control" placeholder="<?=$lang["Enter_Username"];?>">
 												</div>
 												<div class="col-md-2">
-													<input name="passWord" type="password" id="passWord" class="form-control" placeholder="<?=$lang["Password"];?> Girin">
+													<input name="passWord" type="password" id="passWord" class="form-control" placeholder="<?=$lang["Enter_Password"];?>">
 												</div>
-												<div class="col-md-1">
+												<div class="col-md-2">
 													<div class="checkbox">
 														<label>
 														<input id="auth" name="auth" type="checkbox">
@@ -134,7 +134,7 @@
 							<thead>
 								<tr>
 									<th><?=$lang["Name_Surname"];?></th>
-									<th><?=$lang["User_Name"];?></th>
+									<th><?=$lang["Username"];?></th>
 									<th><?=$lang["eMail"];?></th>
 									<th><?=$lang["Phone"];?></th>
 									<th><?=$lang["Operations"];?></th>

@@ -8,7 +8,6 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 {
 ?>
 <?php include("header.php") ?>
-<?php include("database.php") ?>
 
 
 <section id="content">
@@ -17,7 +16,7 @@ if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
 $keyContent=$_POST['keyContent'];
 $keyNumber=$_POST['keyNumber'];
 
-$situation=$connection->query("insert into keys  (keyContent,keyNumber,keyStatus) values ('$keyContent','$keyNumber','0')") or die ("bir hata olustu...");
+$situation=$connection->query("insert into roomkeys  (keyContent,keyNumber,keyStatus) values ('$keyContent','$keyNumber','0')") or die ("bir hata olustu...");
 
 
 if($situation){
