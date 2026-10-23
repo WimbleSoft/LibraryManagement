@@ -1,212 +1,129 @@
 <?php
-session_start(); 
-if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
+require __DIR__ . '/includes/bootstrap.php';
+
+$currentUser = require_admin($connection);
+
+if (is_post()) {
+    verify_csrf();
+
+    $action = $_POST['action'] ?? '';
+    $bookId = post_int('bookId');
+    $bookName = post_string('bookName', 100);
+    $bookAuthor = post_string('bookAuthor', 100);
+
+    if ($action === 'add' || $action === 'update') {
+        if ($bookName === '' || $bookAuthor === '') {
+            flash('danger', t('Fill_All_Fields'));
+        } elseif ($action === 'add') {
+            $connection
+                ->prepare('INSERT INTO books (bookName, bookAuthor) VALUES (?, ?)')
+                ->execute([$bookName, $bookAuthor]);
+            flash('success', t('Process_Successful'));
+        } elseif ($bookId !== null) {
+            $connection
+                ->prepare('UPDATE books SET bookName = ?, bookAuthor = ? WHERE bookId = ?')
+                ->execute([$bookName, $bookAuthor, $bookId]);
+            flash('success', t('Process_Successful'));
+        }
+    } elseif ($action === 'delete' && $bookId !== null) {
+        delete_item($connection, 'books', 'bookId', ITEM_BOOK, $bookId);
+    }
+
+    redirect('books.php');
+}
+
+$books = $connection->query('SELECT bookId, bookName, bookAuthor FROM books ORDER BY bookName')->fetchAll();
+$openLoans = open_loans_by_item($connection, ITEM_BOOK);
+
+$activePage = 'books';
+$pageTitle = t('Books');
+require __DIR__ . '/includes/header.php';
 ?>
-<meta http-equiv="refresh" content="0;URL=login.php">
-<?php
-} else
-{
-?>
-
-
-<?php include("header.php") ?>
-<script>
-document.getElementById("books").className = "active";
-</script>
-
-  <div class="content-wrapper">
-
-    <section class="content-header">
-      <h1>
-        <?=$lang["Books"];?>
-      </h1>
-      <ol class="breadcrumb">
-        <li class="active"><a href="#"><i class="fa fa-dashboard"></i> <?=$lang["Homepage"];?></a></li>
-        <li><a href="#"><?=$lang["Books"];?></a></li>
-      </ol>
-    </section>
-
-    <section class="content">
-      <div class="row">
-        <div class="col-xs-12">
-          <div class="box">
-            <div class="box-header">
-              
-			 
-
-        <div class="col-md-6">
-          <div class="box box-default collapsed-box">
-            <div class="box-header with-border">
-              <h3 class="box-title"><?=$lang["Add_New_Book"];?></h3>
-
-              <div class="box-tools">
-                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
-                </button>
-              </div>
-              
-            </div>
-            
-            
-            <div class="box-body">
-			
-			
-			
-			<form role="form" method="post" enctype="multipart/form-data" action="books-add.php">
-              <div class="box-body">
-                <div class="form-group">
-					<div class="col-md-5">
-						<input  name="bookName" type="text" class="form-control" id="bookName" placeholder="<?=$lang["Enter_Book_Name"];?>">
-					</div>
-					<div class="col-md-5">
-						<input  name="bookWriter" type="text" class="form-control" id="bookWriter" placeholder="<?=$lang["Enter_Book_Writer"];?>">
-					</div>
-					<div class="col-md-2">
-						<button type="submit" class="btn btn-primary"><?=$lang["Add_the_Book"];?></button>
-					</div>
-				</div>
-              </div>
-              
-
-            </form>
-			
-			
-            </div>
-            
-          </div>
-          
+<div class="box box-primary collapsed-box">
+    <div class="box-header with-border">
+        <h3 class="box-title"><?= e(t('Add_New_Book')) ?></h3>
+        <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
         </div>
-
-
-
-
-			 
+    </div>
+    <div class="box-body">
+        <form method="post" action="books.php" class="row">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="add">
+            <div class="col-md-5 form-group">
+                <input name="bookName" type="text" class="form-control" maxlength="100" required placeholder="<?= e(t('Enter_Book_Name')) ?>">
             </div>
-            
-            <div class="box-body">
-              <table id="example1" class="table table-bordered table-striped">
-                <thead>
-				  <tr>
-					<th><?=$lang["Book_Name"];?></th>
-					<th><?=$lang["Writer"];?></th>
-					<th><?=$lang["Status"];?></th>	
-					<th><?=$lang["Operations"];?></th>
-				  </tr>
-				</thead>
-
-				<tbody>
-					<?php
-					$pullBooks=$connection->query("select * from books")->fetchAll(PDO::FETCH_ASSOC);
-					foreach ($pullBooks as $pulledBook)
-					{
-					?>
-				  <tr>
-					<td><?=$pulledBook['bookName'];?></td>
-					<td><?=$pulledBook['bookWriter'];?></td>
-					<td>
-					<div class="box box-default collapsed-box" style="border:1px solid #00a65a;">
-						<div class="box-header with-border">
-						  <h4 class="box-title"><?php if($pulledBook['bookStatus']=='0')echo $lang["In_Inventory"]; else echo $lang["Lent"];?></h4>
-						  <div class="box-tools">
-							<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
-							</button>
-						  </div> 
-						</div>
-						<div class="box-body">
-							<?php
-							if($pulledBook['bookStatus']=='1')
-							{
-								$bookId=$pulledBook['bookId'];
-								$pullLoan=$connection->query("select * from loans where type='0' AND productId='$bookId' AND returnAccepterId=''")->fetchAll(PDO::FETCH_ASSOC);
-								foreach ($pullLoan as $pulledLoan)
-								{
-									echo 'Bu '.$pulledLoan['type'].', '.$pulledLoan['loanDate'].' tarihinde ';
-									
-									$pullPersonnel=$connection->query("select * from personnel where personnelId=".$pulledLoan['loanerId']."")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($pullPersonnel as $pulledPersonnel)
-									{
-									echo $pulledPersonnel['nameSurname'];
-									}
-									echo ' tarafından ';
-									$pullPersonnel2=$connection->query("select * from personnel where personnelId=".$pulledLoan['loanerId']."")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($pullPersonnel2 as $pulledPersonnel2)
-									{
-									echo $pulledPersonnel2['nameSurname'];
-									}
-									echo ' adlı personele emanet edilmiştir.';
-									if ($pulledLoan['returnDate']!="0000-00-00") 
-									{
-									//echo $pulledLoan['returnDate'].' tarihinde, '.$pulledLoan['returnAccepterId'].' tarafından iade alınmıştır.';
-									}
-									else echo 'Bu <?=$lang["Book"];?> henüz iade alınmamıştır.';
-								}
-							}
-							?>
-						</div>
-					</div>
-					</td>
-					
-					
-					
-					<div class="modal fade bs-example-modal-lg" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-					  <div class="modal-dialog" role="document">
-						<div class="modal-content">
-							<form role="form" method="post" enctype="multipart/form-data" action="books-edit.php">
-							  <div class="modal-header">
-								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-								<h4 class="modal-title" id="myModalLabel"><?=$lang["Book"];?> <?=$lang["Edit"];?></h4>
-							  </div>
-							  <div class="modal-body">
-								<div class="form-group">
-									<div class="col-md-6">
-									<label><?=$lang["Book_Name"];?></label>
-										<input name="bookName" type="text" id="bookName" class="form-control"  placeholder="<?=$lang["Book_Name"];?>" value="<?=$pulledBook['bookName'];?>">
-										<input name="bookId" type="text" id="bookId" hidden="hidden" value="<?=$pulledBook['bookId'];?>">
-									</div>
-									
-									<div class="col-md-6">
-									<label><?=$lang["Book_Writer"];?></label>
-										<input name="bookWriter" type="text" id="bookWriter" class="form-control"  placeholder="<?=$lang["Enter_Book_Writer"];?>" value="<?=$pulledBook['bookWriter'];?>">
-									</div>
-									
-								</div>
-							  </div>
-							  <div class="modal-footer">
-								<button type="button" class="btn btn-default" data-dismiss="modal"><?=$lang["Cancel"];?></button>
-								<button type="submit" class="btn btn-warning"><?=$lang["Save"];?></button>
-							  </div>
-							</form>
-						</div>
-					  </div>
-					</div>
-					<td>
-					  <span class="button-group">
-						<button type="button" class="btn btn-warning fa fa-pencil" data-toggle="modal" data-target="#myModal"></button>
-						<a href="books-delete.php?bookId=<?=$pulledBook['bookId'];?>" onclick="return confirm('<?=$lang["Are_you_sure_to_delete"];?>');" class="fa fa-trash btn btn-danger"></a>
-					  </span>
-					</td>
-				  </tr>
-				  <?php } ?>
-				</tbody>
-              </table>
+            <div class="col-md-5 form-group">
+                <input name="bookAuthor" type="text" class="form-control" maxlength="100" required placeholder="<?= e(t('Enter_Book_Author')) ?>">
             </div>
-            
-          </div>
-          
-        </div>
-        
-      </div>
-      
-    </section>
-    
-  </div>
-  
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-block"><?= e(t('Add_Book')) ?></button>
+            </div>
+        </form>
+    </div>
+</div>
 
-  
- <?php 
- include("footer.php"); 
- include("scripts.php"); 
- ?>
- 
- 
- 
-<?php	} ?>
+<div class="box">
+    <div class="box-body table-responsive">
+        <table class="table table-bordered table-striped data-table">
+            <thead>
+            <tr>
+                <th><?= e(t('Book_Name')) ?></th>
+                <th><?= e(t('Author')) ?></th>
+                <th><?= e(t('Status')) ?></th>
+                <th><?= e(t('Operations')) ?></th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($books as $book): ?>
+                <?php $loan = $openLoans[(int) $book['bookId']] ?? null; ?>
+                <tr>
+                    <td><?= e($book['bookName']) ?></td>
+                    <td><?= e($book['bookAuthor']) ?></td>
+                    <td><?php require __DIR__ . '/includes/loan-status.php'; ?></td>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editBook<?= e($book['bookId']) ?>" title="<?= e(t('Edit')) ?>">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <form method="post" action="books.php" class="inline-form" data-confirm="<?= e(t('Confirm_Delete')) ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="bookId" value="<?= e($book['bookId']) ?>">
+                            <button type="submit" class="btn btn-danger btn-sm" title="<?= e(t('Delete')) ?>"><i class="fa fa-trash"></i></button>
+                        </form>
+
+                        <div class="modal fade" id="editBook<?= e($book['bookId']) ?>" tabindex="-1" role="dialog">
+                            <div class="modal-dialog" role="document">
+                                <form method="post" action="books.php" class="modal-content">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="bookId" value="<?= e($book['bookId']) ?>">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="<?= e(t('Close')) ?>">&times;</button>
+                                        <h4 class="modal-title"><?= e(t('Edit_Book')) ?></h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="form-group">
+                                            <label><?= e(t('Book_Name')) ?></label>
+                                            <input name="bookName" type="text" class="form-control" maxlength="100" required value="<?= e($book['bookName']) ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label><?= e(t('Author')) ?></label>
+                                            <input name="bookAuthor" type="text" class="form-control" maxlength="100" required value="<?= e($book['bookAuthor']) ?>">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal"><?= e(t('Cancel')) ?></button>
+                                        <button type="submit" class="btn btn-warning"><?= e(t('Save')) ?></button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php require __DIR__ . '/includes/footer.php'; ?>

@@ -1,9 +1,10 @@
 <?php
-session_start();
-ob_start();
-session_destroy();
-echo"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />";
-header("Refresh: 0; url=login.php");
-ob_end_flush();
-?>
+require __DIR__ . '/includes/bootstrap.php';
 
+// Signing out changes state, so it only happens through a CSRF-protected POST.
+if (is_post()) {
+    verify_csrf();
+    sign_out();
+}
+
+redirect('login.php');

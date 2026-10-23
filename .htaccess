@@ -1,0 +1,27 @@
+# ------------------------------------------------------------------
+# Apache hardening for Library Records.
+# ------------------------------------------------------------------
+
+Options -Indexes
+
+# Never serve the code-only folders, database dumps or dotfiles.
+RedirectMatch 404 ^/(.*/)?(includes|lang|database)(/|$)
+<FilesMatch "(^\.|\.(sql|md|ini|log)$)">
+    Require all denied
+</FilesMatch>
+
+# PHP settings (mod_php only; PHP-FPM/CGI read .user.ini instead).
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_flag expose_php Off
+    php_flag session.use_strict_mode On
+    php_flag session.cookie_httponly On
+    # PHP2Shell (CVE-2026-109618 / CVE-2026-109619) workarounds.
+    # These only reduce the risk - upgrading PHP is the real fix.
+    php_flag session.upload_progress.enabled Off
+    php_value post_max_size 1M
+    php_value upload_max_filesize 1M
+</IfModule>
+
+# Reject oversized request bodies before PHP parses them.
+LimitRequestBody 1048576
