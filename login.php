@@ -1,76 +1,103 @@
+<?php
+require __DIR__ . '/includes/bootstrap.php';
+
+if (isset($_SESSION['personnelId'])) {
+    redirect('index.php');
+}
+
+$error = null;
+$username = '';
+
+if (is_post()) {
+    verify_csrf();
+
+    $username = post_string('username', 50);
+    $password = $_POST['password'] ?? '';
+    $password = is_string($password) ? $password : '';
+
+    if ($username === '' || $password === '') {
+        $error = t('Enter_Username_And_Password');
+    } elseif (is_login_locked($connection, $username, $config)) {
+        $error = t('Too_Many_Login_Attempts');
+    } else {
+        $statement = $connection->prepare(
+            'SELECT personnelId, password, isAdmin FROM personnel WHERE username = ?'
+        );
+        $statement->execute([$username]);
+        $user = $statement->fetch();
+
+        if (!$user) {
+            // Spend the same time as a real check so usernames cannot be probed by timing.
+            password_verify($password, '$2y$10$LFUTb9JxdMPwlt2bsflqgecQ/WaOj.U93TVprk3t0V1Cdher8F4E.');
+        }
+
+        $needsRehash = false;
+        if ($user && verify_password($password, $user['password'], $needsRehash)) {
+            if ($needsRehash) {
+                $connection
+                    ->prepare('UPDATE personnel SET password = ? WHERE personnelId = ?')
+                    ->execute([hash_password($password), $user['personnelId']]);
+            }
+
+            if ((int) $user['isAdmin'] === 1) {
+                clear_failed_logins($connection, $username);
+                sign_in($user);
+                redirect('index.php');
+            }
+
+            $error = t('No_Panel_Access');
+        } else {
+            record_failed_login($connection, $username);
+            $error = t('Invalid_Credentials');
+        }
+    }
+}
+?>
 <!DOCTYPE html>
-<html>
-<?php include_once("lang.php"); ?>
+<html lang="<?= e($languageCode) ?>">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title><?=$lang["Login_Title"];?></title>
-  <!-- Tell the browser to be responsive to screen width -->
-  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
-<link rel="stylesheet" href="dist/css/AdminLTE.min.css">
-<link rel="stylesheet" href="dist/css/skins/_all-skins.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/iCheck/1.0.2/skins/flat/blue.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jvectormap/1.2.2/jquery-jvectormap.min.css">
-
-  <!-- Theme style -->
-  <link rel="stylesheet" href="dist/css/AdminLTE.min.css">
-  <!-- iCheck -->
-  <link rel="stylesheet" href="plugins/iCheck/square/blue.css">
-
-  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-  <!--[if lt IE 9]>
-  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-  <![endif]-->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?= e(t('Login_Title')) ?></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="dist/css/AdminLTE.min.css">
+    <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
-  <div class="login-logo">
-    <a href="index.php"><b><?=$lang["Library_Records"];?></b><?=$lang["LS"];?></a>
-  </div>
-  <!-- /.login-logo -->
-  <div class="login-box-body">
-    <p class="login-box-msg"><?=$lang["Login_to_reach_panel"];?></p>
+    <div class="login-logo">
+        <b><?= e(t('App_Name')) ?></b>
+    </div>
+    <div class="login-box-body">
+        <p class="login-box-msg"><?= e(t('Login_Prompt')) ?></p>
 
-    <form action="login-control.php" method="post">
-      <div class="form-group has-feedback">
-        <input name="userName" id="userName" class="form-control" placeholder="<?=$lang["Enter_Username"];?>">
-        <span class="glyphicon glyphicon-user form-control-feedback"></span>
-      </div>
-      <div class="form-group has-feedback">
-        <input name="passWord" id="passWord"  type="password" class="form-control" placeholder="<?=$lang["Enter_Password"];?>">
-        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-      </div>
-      <div class="row">
-        <div class="col-xs-8">
-          
-        </div>
-        
-        <div class="col-xs-4">
-          <button type="submit" class="btn btn-primary btn-block btn-flat"><?=$lang["Login"];?></button>
-        </div>
-        
-      </div>
-    </form>
-  </div>
-  <!-- /.login-box-body -->
+        <?php if ($error !== null): ?>
+            <div class="alert alert-danger"><?= e($error) ?></div>
+        <?php endif; ?>
+
+        <form action="login.php" method="post">
+            <?= csrf_field() ?>
+            <div class="form-group has-feedback">
+                <input name="username" type="text" class="form-control" autocomplete="username" required
+                       placeholder="<?= e(t('Enter_Username')) ?>" value="<?= e($username) ?>">
+                <span class="glyphicon glyphicon-user form-control-feedback"></span>
+            </div>
+            <div class="form-group has-feedback">
+                <input name="password" type="password" class="form-control" autocomplete="current-password" required
+                       placeholder="<?= e(t('Enter_Password')) ?>">
+                <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+            </div>
+            <div class="row">
+                <div class="col-xs-8">
+                    <a href="?lang=en">EN</a> | <a href="?lang=tr">TR</a>
+                </div>
+                <div class="col-xs-4">
+                    <button type="submit" class="btn btn-primary btn-block btn-flat"><?= e(t('Login')) ?></button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
-<!-- /.login-box -->
-
-<!-- jQuery 3.4.1 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-<script>
-  $.widget.bridge('uibutton', $.ui.button);
-</script>
-<!-- Bootstrap 3.4.1 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </body>
 </html>

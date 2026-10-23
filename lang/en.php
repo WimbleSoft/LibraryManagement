@@ -1,165 +1,150 @@
 <?php
+/**
+ * English interface strings.
+ */
 
-$lang = array(
-"LIBRARY_RECORDS" =>"LIBRARY RECORDS",
-"Library_Records" =>"Library Records",
-"LS" => "LS",
-"Toggle_Nav" => "Toggle Nav",
-"Login_to_reach_panel" => "Login to reach admin panel",
-"Login" => "Login",
-"lang" => "Language",
-"Homepage" => "Homepage",
-"Control_Panel" => "Control Panel",
-"Total_Books" => "Total Books",
-"Total_Keys" => "Total Keys",
-"Total_Computers" => "Total Computers",
-"Total_Personnel" => "Total Personnel",
-"Books" => "Books",
-"Computers" => "Computers",
-"Keys" => "Keys",
-"Personnel" => "Personnel",
-"Loans" => "Loans",
-"Login_Title" => "Login to LibraryRecords",
-"Add_New_Personnel" => "Add New Personnel",
-"Name_Surname" => "Name Surname",
-"Username" => "Username",
-"eMail" => "e-Mail",
-"Phone" => "Phone",
-"Operations" => "Operations",
-"Are_you_sure_to_delete" => "Are you sure to delete? This operation cannot be reverted!",
-"Enter_Name_Surname" => "Enter Name and Surname",
-"Enter_Phone" => "Enter Phone Number",
-"Enter_eMail" => "Enter e-mail",
-"Is_Admin" => "Is this person an admin?",
-"Add_the_Personnel" => "Add the personnel",
-"Add_a_Key" => "Add a New Key",
-"Number" => "Number",
-"Content" => "Content",
-"Status" => "Status",
-"Enter_Key_Number" => "Enter Key Number",
-"Enter_Key_Content" => "Enter Key Content",
-"Key_Number" => "Key Number",
-"Key_Content" => "Key Content",
-"Key" => "Key",
-"Add_the_Key" => "Add the Key",
-"Add_New_Computer" => "Add New Computer",
-"Manufacturer" => "Manufacturer",
-"Model" => "Model",
-"Serial_Number" => "Serial Number",
-"Edit_Computer" => "Edit_Computer",
-"Enter_Serial_Number" => "Enter Serial Number",
-"Enter_Model" => "Enter Model",
-"In_Inventory" => "In Inventory",
-"Lent" => "Lent",
-"Enter_Manufacturer" => "Enter Manufacturer",
-"Add_the_Computer" => "Add the Computer",
-"Add_New_Book" => "Add New Book",
-"Book_Name" => "Book Name",
-"Writer" => "Writer",
-"Book_Writer" => "Book Writer",
-"Enter_Book_Writer" => "Enter Book Writer",
-"Book" => "Book",
-"Enter_Book_Name" => "Enter Book Name",
-"Enter_Book_Writer" => "Enter Book Writer",
-"Add_the_Book" => "Add the Book",
-"Edit" => "Edit",
-"Cancel" => "Cancel",
-"Save" => "Save",
-"Process_Successful" => "Process Successful",
-"Process_Failed" => "Process Failed",
-"Lent_Information" => "Lent Information",
-"New_Loan_Entry" => "New Loan Entry",
-"Please_Select_a_Book_From_List" => "Please Select a Book From List",
-"Please_Select_a_Computer_From_List" => "Please Select a Computer From List",
-"Please_Select_a_Key_From_List" => "Please Select a Key From List",
-"Computer" => "Computer",
-"Loaner" => "Loaner",
-"Lender" => "Lender",
-"Loan_Date" => "Loan Date",
-"Return_Date" => "Return Date",
-"Return_Accepter" => "Return Accepter",
-"Please_check_once_more" => "Please check once more",
-"Select_Personnel" => "Select Personnel",
-"Type" => "Type",
-"Name" => "Name",
-"Not_Returned_Yet" => "Not Returned Yet",
-"Date_and_Repossesser_will_be_assigned_automatically" => "Date and Repossesser will be assigned automatically",
-"This_loan_information_for_this_product_will_be_deleted_from_the_system" => "This loan information for this product will be deleted from the system",
-"Settings" => "Settings",
-"Personnel_Settings_Screen" => "Personnel Settings Screen",
-"Enter_Username" => "Enter Username",
-"Enter_Password" => "Enter Password",
-"Enter_Phone" => "Enter Phone",
-"PageTitle" => "Library Records Admin Panel",
-"Record_Deleted" => "Record Deleted",
-"Record_couldnt_Deleted" => "Record couldnt deleted",
-"" => "",
-"" => "",
+return [
+    // Application
+    'App_Name'            => 'Library Records',
+    'App_Name_Upper'      => 'LIBRARY RECORDS',
+    'App_Short_Name'      => 'LR',
+    'Page_Title'          => 'Library Records Admin Panel',
+    'Version'             => 'Version',
+    'All_Rights_Reserved' => 'All rights reserved.',
+    'Toggle_Navigation'   => 'Toggle navigation',
 
-);
-function getTypeName ($type)
-{
-	$returnString="";
-	switch($type)
-	{
-		case 0:
-		{
-			$returnString = $lang["Book"];
-			break;
-		}
-		case 1:
-		{
-			$returnString = $lang["Computer"];
-			break;
-		}
-		case 2:
-		{
-			$returnString = $lang["Key"];
-			break;
-		}
-		default:
-		{
-			$returnString = "UNDEFINED";
-		}
-	}
-	return $returnString;
-}
-function returnKeyStatus()
-{
-	$returnString="";
-	$returnString += 'This '.getTypeName($pulledLoan['type']).', has been lent by ';
-	
-	$pullPersonnel=$connection->query("select * from personnel where personnelId=".$pulledLoan['loanerId']."")->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($pullPersonnel as $pulledPersonnel)
-	{
-		$returnString += $pulledPersonnel['nameSurname'];
-	}
-	$returnString +=  ' to ';
-	$pullPersonnel2=$connection->query("select * from personnel where personnelId=".$pulledLoan['lenderId']."")->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($pullPersonnel2 as $pulledPersonnel2)
-	{
-		$returnString += $pulledPersonnel2['nameSurname'];
-	}
+    // Sign in
+    'Login_Title'                 => 'Sign in to Library Records',
+    'Login_Prompt'                => 'Sign in to reach the admin panel',
+    'Login'                       => 'Sign In',
+    'Sign_Out'                    => 'Sign Out',
+    'Enter_Username_And_Password' => 'Please enter your username and password.',
+    'Invalid_Credentials'         => 'The username or password is incorrect.',
+    'No_Panel_Access'             => 'Your account does not have access to the admin panel.',
+    'Too_Many_Login_Attempts'     => 'Too many failed attempts. Please try again in 15 minutes.',
 
-	$returnString +=  ' at '.$pulledLoan['loanDate'];
+    // Navigation and dashboard
+    'Homepage'        => 'Homepage',
+    'Control_Panel'   => 'Control Panel',
+    'Books'           => 'Books',
+    'Computers'       => 'Computers',
+    'Keys'            => 'Keys',
+    'Personnel'       => 'Personnel',
+    'Loans'           => 'Loans',
+    'Settings'        => 'Settings',
+    'Total_Books'     => 'Total Books',
+    'Total_Keys'      => 'Total Keys',
+    'Total_Computers' => 'Total Computers',
+    'Total_Personnel' => 'Total Personnel',
+    'Open_Loans'      => 'Items currently on loan',
+    'More_Info'       => 'More info',
 
-	if ($pulledLoan['returnDate']!="0000-00-00")
-	{
-		$returnString += ' and was taken back by ';
-	
-		$pullPersonnel3=$connection->query("select * from personnel where personnelId=".$pulledLoan['returnAccepterId']."")->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($pullPersonnel3 as $pulledPersonnel3)
-		{
-			$returnString += $pulledPersonnel3['nameSurname'];
-		}
-	
-		$returnString += ' at '.$pulledLoan['returnDate'];
-	}
-	else 
-	{
-		$returnString += 'This key hasn\'t been returned yet.';
-	}
-	
-	return $returnString;
-}
-?>
+    // Common
+    'Add'        => 'Add',
+    'Edit'       => 'Edit',
+    'Delete'     => 'Delete',
+    'Save'       => 'Save',
+    'Cancel'     => 'Cancel',
+    'Close'      => 'Close',
+    'Status'     => 'Status',
+    'Type'       => 'Type',
+    'Item'       => 'Item',
+    'Operations' => 'Operations',
+    'Unknown'    => 'Unknown',
+
+    // Messages
+    'Process_Successful'         => 'The operation was successful.',
+    'Process_Failed'             => 'The operation failed.',
+    'Record_Deleted'             => 'The record was deleted.',
+    'Fill_All_Fields'            => 'Please fill in all required fields.',
+    'Invalid_Request'            => 'Invalid or expired request. Please go back, reload the page and try again.',
+    'Confirm_Delete'             => 'Are you sure you want to delete this? This cannot be undone!',
+    'Item_On_Loan_Cannot_Delete' => 'This item is on loan. Please mark it as returned before deleting it.',
+
+    // Item status
+    'In_Inventory'      => 'In inventory',
+    'Lent'              => 'Lent',
+    'Lent_Description'  => 'Lent to %1$s on %2$s by %3$s.',
+    'Deleted_Personnel' => '(deleted personnel)',
+    'Deleted_Item'      => '(deleted item)',
+
+    // Books
+    'Book'              => 'Book',
+    'Book_Name'         => 'Book Name',
+    'Author'            => 'Author',
+    'Add_New_Book'      => 'Add New Book',
+    'Add_Book'          => 'Add Book',
+    'Edit_Book'         => 'Edit Book',
+    'Enter_Book_Name'   => 'Enter book name',
+    'Enter_Book_Author' => 'Enter author',
+
+    // Computers
+    'Computer'            => 'Computer',
+    'Manufacturer'        => 'Manufacturer',
+    'Model'               => 'Model',
+    'Serial_Number'       => 'Serial Number',
+    'Add_New_Computer'    => 'Add New Computer',
+    'Add_Computer'        => 'Add Computer',
+    'Edit_Computer'       => 'Edit Computer',
+    'Enter_Manufacturer'  => 'Enter manufacturer',
+    'Enter_Model'         => 'Enter model',
+    'Enter_Serial_Number' => 'Enter serial number',
+
+    // Keys
+    'Key'                   => 'Key',
+    'Key_Number'            => 'Key Number',
+    'Description'           => 'Description',
+    'Add_New_Key'           => 'Add New Key',
+    'Add_Key'               => 'Add Key',
+    'Edit_Key'              => 'Edit Key',
+    'Enter_Key_Number'      => 'Enter key number',
+    'Enter_Key_Description' => 'Enter what the key opens',
+
+    // Loans
+    'New_Loan'             => 'New Loan',
+    'Select_Book'          => 'Select a book',
+    'Select_Computer'      => 'Select a computer',
+    'Select_Key'           => 'Select a key',
+    'Select_Personnel'     => 'Select personnel',
+    'Borrower'             => 'Borrower',
+    'Lender'               => 'Lender',
+    'Loan_Date'            => 'Loan Date',
+    'Return_Date'          => 'Return Date',
+    'Received_By'          => 'Received By',
+    'Not_Returned_Yet'     => 'Not returned yet',
+    'Mark_Returned'        => 'Mark as returned',
+    'Confirm_Return'       => 'Mark this item as returned? Today\'s date and your name will be recorded.',
+    'Confirm_Delete_Loan'  => 'This loan record will be deleted from the system. Continue?',
+    'Item_Already_Lent'    => 'This item is already on loan.',
+    'Already_Returned'     => 'This item has already been returned.',
+    'Return_Before_Delete' => 'A loan that has not been returned cannot be deleted. Please mark it as returned first.',
+
+    // Personnel
+    'Full_Name'                    => 'Full Name',
+    'Username'                     => 'Username',
+    'Email'                        => 'Email',
+    'Phone'                        => 'Phone',
+    'Password'                     => 'Password',
+    'Admin'                        => 'Admin',
+    'Is_Admin'                     => 'Administrator (can sign in to this panel)',
+    'Add_New_Personnel'            => 'Add New Personnel',
+    'Edit_Personnel'               => 'Edit Personnel',
+    'Enter_Full_Name'              => 'Enter full name',
+    'Enter_Phone'                  => 'Enter phone number',
+    'Enter_Email'                  => 'Enter email',
+    'Enter_Username'               => 'Enter username',
+    'Enter_Password'               => 'Enter password',
+    'Leave_Blank_To_Keep_Password' => 'Leave blank to keep the current password',
+    'Invalid_Email'                => 'Please enter a valid email address.',
+    'Password_Too_Short'           => 'The password must be at least 8 characters long.',
+    'Username_Taken'               => 'This username is already in use.',
+    'Cannot_Delete_Self'           => 'You cannot delete your own account.',
+    'Personnel_Has_Open_Loans'     => 'This person still has items on loan. Please return them first.',
+
+    // Settings
+    'Account_Settings'          => 'Account Settings',
+    'New_Password'              => 'New Password',
+    'Current_Password'          => 'Current Password',
+    'Current_Password_Required' => 'Required to save changes',
+    'Current_Password_Wrong'    => 'Your current password is incorrect.',
+];

@@ -1,93 +1,46 @@
 <?php
-session_start(); 
-if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
+require __DIR__ . '/includes/bootstrap.php';
+
+$currentUser = require_admin($connection);
+
+$count = static function (string $table) use ($connection): int {
+    return (int) $connection->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();
+};
+
+$tiles = [
+    ['count' => $count('books'),     'label' => t('Total_Books'),     'color' => 'bg-green',  'icon' => 'ion-ios-book',   'href' => 'books.php'],
+    ['count' => $count('roomkeys'),  'label' => t('Total_Keys'),      'color' => 'bg-red',    'icon' => 'ion-key',        'href' => 'keys.php'],
+    ['count' => $count('computers'), 'label' => t('Total_Computers'), 'color' => 'bg-blue',   'icon' => 'ion-laptop',     'href' => 'computers.php'],
+    ['count' => $count('personnel'), 'label' => t('Total_Personnel'), 'color' => 'bg-yellow', 'icon' => 'ion-person-add', 'href' => 'personnel.php'],
+];
+
+$openLoanCount = (int) $connection->query('SELECT COUNT(*) FROM loans WHERE returnDate IS NULL')->fetchColumn();
+
+$activePage = 'index';
+$pageTitle = t('Control_Panel');
+require __DIR__ . '/includes/header.php';
 ?>
-<meta http-equiv="refresh" content="0;URL=login.php">
-<?php
-} else
-{
-?>
-<?php include("header.php") ?>
-<script>
-document.getElementById("homepage").className = "active";
-</script>
-
-  <div class="content-wrapper">
-
-    <section class="content-header">
-      <h1>
-        <?=$lang["Control_Panel"];?>
-      </h1>
-      <ol class="breadcrumb">
-        <li><a href="#"><i class="fa fa-dashboard"></i> <?=$lang["Homepage"];?></a></li>
-        
-      </ol>
-    </section>
-
-    <section class="content">
-      
-      <div class="row">
+<div class="row">
+    <?php foreach ($tiles as $tile): ?>
         <div class="col-lg-3 col-xs-6">
-          
-          <div class="small-box bg-green">
-            <div class="inner">
-              <h3><?=$bookCount=$connection->query("select * from books")->rowCount();?><sup style="font-size: 20px"></sup></h3>
-
-              <p><?=$lang["Total_Books"];?></p>
+            <div class="small-box <?= e($tile['color']) ?>">
+                <div class="inner">
+                    <h3><?= e($tile['count']) ?></h3>
+                    <p><?= e($tile['label']) ?></p>
+                </div>
+                <div class="icon"><i class="ion <?= e($tile['icon']) ?>"></i></div>
+                <a href="<?= e($tile['href']) ?>" class="small-box-footer"><?= e(t('More_Info')) ?> <i class="fa fa-arrow-circle-right"></i></a>
             </div>
-            <div class="icon">
-              <i class="ion ion-ios-book"></i>
-            </div>
-          </div>
         </div>
-        <div class="col-lg-3 col-xs-6">
-          
-          <div class="small-box bg-red">
-            <div class="inner">
-              <h3><?=$keyCount=$connection->query("select * from computers")->rowCount();?><sup style="font-size: 20px"></sup></h3>
+    <?php endforeach; ?>
+</div>
 
-              <p><?=$lang["Total_Keys"];?></p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-key"></i>
-            </div>
-          </div>
+<div class="row">
+    <div class="col-xs-12">
+        <div class="callout callout-info">
+            <p><i class="fa fa-calendar"></i> <?= e(t('Open_Loans')) ?>: <b><?= e($openLoanCount) ?></b>
+                &mdash; <a href="loans.php"><?= e(t('Loans')) ?></a></p>
         </div>
-        <div class="col-lg-3 col-xs-6">
-          
-          <div class="small-box bg-blue">
-            <div class="inner">
-              <h3><?=$computerCount=$connection->query("select * from computers")->rowCount();?><sup style="font-size: 20px"></sup></h3>
-
-              <p><?=$lang["Total_Computers"];?></p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-laptop"></i>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-lg-3 col-xs-6">
-          
-          <div class="small-box bg-yellow">
-            <div class="inner">
-              <h3><?=$personnelCount=$connection->query("select * from personnel")->rowCount();?></h3>
-
-              <p><?=$lang["Total_Personnel"];?></p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-person-add"></i>
-            </div>
-           
-          </div>
-        </div>
-        
-       
-      </div>
-      
-    </section>
-    
-  </div>
- <?php include("footer.php"); ?> 
- <?php include("scripts.php"); ?> 
-<?php	} ?>
+    </div>
+</div>
+<?php require __DIR__ . '/includes/footer.php'; ?>

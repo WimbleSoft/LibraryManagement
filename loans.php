@@ -1,384 +1,240 @@
 <?php
-	session_start();
-	if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
-	?>
-<meta http-equiv="refresh" content="0;URL=login.php">
-<?php
-	} else
-	{
-	?>
+require __DIR__ . '/includes/bootstrap.php';
 
-<?php include("header.php") ?>
+$currentUser = require_admin($connection);
 
-<script>
-	document.getElementById("loans").className = "active";
-</script>
+// Where each item type lives, used to check that a loaned item exists.
+$itemTables = [
+    ITEM_BOOK     => ['table' => 'books',     'id' => 'bookId'],
+    ITEM_COMPUTER => ['table' => 'computers', 'id' => 'computerId'],
+    ITEM_KEY      => ['table' => 'roomkeys',  'id' => 'keyId'],
+];
 
-<div class="content-wrapper">
+if (is_post()) {
+    verify_csrf();
 
-<section class="content-header">
-	<h1>
-		<?=$lang["Lent_Information"];?>
-	</h1>
-	<ol class="breadcrumb">
-		<li class="active"><a href="#"><i class="fa fa-dashboard"></i> <?=$lang["Homepage"];?></a></li>
-		<li><a href="#"><?=$lang["Loans"];?></a></li>
-	</ol>
-</section>
+    $action = $_POST['action'] ?? '';
 
-<section class="content">
-	<div class="row">
-		<div class="col-xs-12">
-			<div class="box">
-				<div class="box-header">
-					<div class="box box-default collapsed-box" style="border:1px solid #00a65a;">
-						<div class="box-header with-border">
-							<h3 class="box-title"><?=$lang["New_Loan_Entry"];?></h3>
-							<div class="box-tools">
-								<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
-								</button>
-							</div>
-							
-						</div>
-	
-						<div class="box-body">
-							<div class="col-md-12">
-								
-								<div class="nav-tabs-custom">
-									<ul class="nav nav-tabs">
-										<li class="active"><a href="#tab_1" data-toggle="tab"><?=$lang["Book"];?></a></li>
-										<li><a href="#tab_2" data-toggle="tab"><?=$lang["Computer"];?></a></li>
-										<li><a href="#tab_3" data-toggle="tab"><?=$lang["Key"];?></a></li>
-									</ul>
-									<div class="tab-content">
-										<div class="tab-pane" id="tab_1">
-											<form role="form" method="post" enctype="multipart/form-data" action="loans-add.php">
-												<div class="col-md-4">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Book"];?></label>
-															<input  hidden="hidden" name="type" id="type" type="text" value="0">
-															<select name="id"class="form-control select2" style="width: 100%;">
-																<option selected="selected"><?=$lang["Please_Select_a_Book_From_List"];?></option>
-															<?php
-																$pullBook=$connection->query("select * from books WHERE bookStatus='0' ")->fetchAll(PDO::FETCH_ASSOC);
-																foreach ($pullBook as $pulledBook)
-																{
-																?>
-																	<option value="<?=$pulledBook['bookId'];?>">
-																		<?=$pulledBook['bookName'];?> | <?=$pulledBook['bookWriter'];?>
-																	</option>
-															<?php 
-																} 
-																?>
-															</select>
-															<label><?=$lang["Loaner"];?></label>
-															<select name="loanerId" class="form-control select2" style="width: 100%;">
-																<option disabled selected="selected"><?=$lang["Select_Personnel"];?></option>
-															<?php
-																$pullPersonnel=$connection->query("select * from personnel")->fetchAll(PDO::FETCH_ASSOC);
-																foreach ($pullPersonnel as $pulledPersonnel)
-																{
-																?>
-																<option value="<?=$pulledPersonnel['personnelId'];?>"><?=$pulledPersonnel['nameSurname'];?></option>
-															<?php 
-																}
-																?>
-															</select>
-														</div>
-													</div>
-												</div>
-												<div class="col-md-4">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Lender"];?></label>
-															<input readonly="readonly" type="text" class="form-control" placeholder="<?=$_SESSION['enteredPerson'];?>">
-															<input  hidden="hidden" name="lenderId" id="lenderId" type="text" value="<?=$_SESSION['personnelId'];?>">
-															<label><?=$lang["Loan_Date"];?>:</label>
-															<div class="input-group date">
-																<div class="input-group-addon">
-																	<i class="fa fa-calendar"></i>
-																</div>
-																<input type="text" name="loanDate"class="form-control pull-right" id="datepicker3" value="<?=$tarih = date("d-m-Y");?>">
-															</div>
-														</div>
-													</div>
-												</div>
-												<div class="col-md-2">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Please_check_once_more"];?></label>
-															<input type="submit" class="form-control btn btn-block btn-warning btn-lg" value="<?=$lang["Save"];?>">
-														</div>
-													</div>
-												</div>
-											</form>
-										</div>
-										<div class="tab-pane active" id="tab_2">
-											<form role="form" method="post" enctype="multipart/form-data" action="loans-add.php">
-												<div class="col-md-4">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Computer"];?></label>
-															<input  hidden="hidden" name="type" id="type" type="text" value="1">
-															<select id="productId" name="productId" class="form-control select2" style="width: 100%;">
-																<option selected="selected"><?=$lang["Please_Select_a_Computer_From_List"];?></option>
-															<?php
-																$pullComputer=$connection->query("select * from computers WHERE computerStatus='0' ")->fetchAll(PDO::FETCH_ASSOC);
-																foreach ($pullComputer as $pulledComputer)
-																{
-																?>
-																<option value="<?=$pulledComputer['computerId'];?>">
-																	<?=$pulledComputer['manufacturer'];?> | <?=$pulledComputer['model'];?> | <?=$pulledComputer['serialNo'];?>
-																</option>
-															<?php 
-																}
-																?>
-															</select>
-															<label><?=$lang["Loaner"];?></label>
-															<select name="loanerId" id="loanerId"class="form-control select2" style="width: 100%;">
-																<option selected="selected"><?=$lang["Select_Personnel"];?></option>
-																<?php
-																	$pullPersonnel=$connection->query("select * from personnel")->fetchAll(PDO::FETCH_ASSOC);
-																	foreach ($pullPersonnel as $pulledPersonnel)
-																	{
-																	?>
-																<option value="<?=$pulledPersonnel['personnelId'];?>"><?=$pulledPersonnel['nameSurname'];?></option>
-																<?php } ?>
-															</select>
-														</div>
-													</div>
-												</div>
-												<div class="col-md-4">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Lender"];?></label>
-															<input readonly="readonly" type="text" class="form-control" placeholder="<?=$_SESSION['enteredPerson'];?>">
-															<input  hidden="hidden" name="lenderId" id="lenderId" type="text" value="<?=$_SESSION['personnelId'];?>">
-															<label><?=$lang["Loan_Date"];?>:</label>
-															<div class="input-group date">
-																<div class="input-group-addon">
-																	<i class="fa fa-calendar"></i>
-																</div>
-																<input type="text" name="loanDate"class="form-control pull-right" id="datepicker" value="<?=$tarih = date("d-m-Y");?>">
-															</div>
-														</div>
-													</div>
-												</div>
-												<div class="col-md-2">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Please_check_once_more"];?></label>
-															<input type="submit" class="form-control btn btn-block btn-warning btn-lg" value="<?=$lang["Save"];?>">
-														</div>
-													</div>
-												</div>
-											</form>
-										</div>
-										<div class="tab-pane" id="tab_3">
-											<form role="form" method="post" enctype="multipart/form-data" action="loans-add.php">
-												<div class="col-md-4">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Key"];?></label>
-															<input  hidden="hidden" name="type" id="type" type="text" value="2">
-															<select name="productId" class="form-control select2" style="width: 100%;">
-																	<option selected="selected"><?=$lang["Please_Select_a_Key_From_List"];?></option>
-															<?php
-																$pullKey=$connection->query("select * from roomkeys WHERE keyStatus='0' ")->fetchAll(PDO::FETCH_ASSOC);
-																foreach ($pullKey as $pulledKey)
-																{
-																?>
-																	<option value="<?=$pulledKey['keyId'];?>">
-																		<?=$pulledKey['keyNumber'];?> | <?=$pulledKey['keyContent'];?>
-																	</option>
-															<?php
-																}
-																?>
-															</select>
-															<label><?=$lang["Loaner"];?></label>
-															<select name="loanerId" id="loanerId" class="form-control select2" style="width: 100%;">
-																	<option selected="selected"><?=$lang["Select_Personnel"];?></option>
-															<?php
-																$pullPersonnel=$connection->query("select * from personnel")->fetchAll(PDO::FETCH_ASSOC);
-																foreach ($pullPersonnel as $pulledPersonnel)
-																{
-																?>
-																	<option value="<?=$pulledPersonnel['personnelId'];?>"><?=$pulledPersonnel['nameSurname'];?></option>
-																<?php 
-																}
-																?>
-															</select>
-														</div>
-													</div>
-												</div>
-												<div class="col-md-4">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Lender"];?></label>
-															<input readonly="readonly" type="text" class="form-control" placeholder="<?=$_SESSION['enteredPerson'];?>">
-															<input  hidden="hidden" name="lenderId" id="lenderId" type="text" value="<?=$_SESSION['personnelId'];?>">
-															<label><?=$lang["Loan_Date"];?>:</label>
-															<div class="input-group date">
-																<div class="input-group-addon">
-																	<i class="fa fa-calendar"></i>
-																</div>
-																<input type="text" name="loanDate"class="form-control pull-right" id="datepicker2" value="<?=$tarih = date("d-m-Y");?>">
-															</div>
-														</div>
-													</div>
-												</div>
-												<div class="col-md-2">
-													<div class="box-body">
-														<div class="form-group">
-															<label><?=$lang["Please_check_once_more"];?></label>
-															<input type="submit" class="form-control btn btn-block btn-warning btn-lg" value="<?=$lang["Save"];?>">
-														</div>
-													</div>
-												</div>
-											</form>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="box-body">
-						<table id="example1" class="table table-bordered table-striped">
-							<thead>
-								<tr>
-									<th><?=$lang["Type"];?></th>
-									<th><?=$lang["Name"];?>/<?=$lang["Manufacturer"];?>/<?=$lang["Model"];?></th>
-									<th><?=$lang["Loan_Date"];?></th>
-									<th><?=$lang["Lender"];?></th>
-									<th><?=$lang["Loaner"];?></th>
-									<th><?=$lang["Return_Date"];?></th>
-									<th><?=$lang["Return_Accepter"];?></th>
-									<th><?=$lang["Operations"];?></th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php
-									$pullData=$connection->query("select * from loans")->fetchAll(PDO::FETCH_ASSOC);
-									foreach ($pullData as $pulledData)
-									{
-									?>
-								<tr>
-									<td><?=$pulledData['type'];?></td>
-									<td>
-									<?php
-										if($pulledData['type']==0)
-										{
-											$pullBook=$connection->query("select * from books where bookId=".$pulledData['loanId']."")->fetchAll(PDO::FETCH_ASSOC);
-											foreach ($pullBook as $pulledBook)
-											{
-												echo $pulledBook['bookName'];
-											}
-										}
-										else if($pulledData['type']==1)
-										{
-											$pullComputer=$connection->query("select * from computers where computerId=".$pulledData['loanId']."")->fetchAll(PDO::FETCH_ASSOC);
-											foreach ($pullComputer as $pulledComputer)
-											{
-												echo $pulledComputer['manufacturer'].' '.$pulledComputer['model'];
-											}
-										}
-										else if($pulledData['type']==2)
-										{
-											$pullKey=$connection->query("select * from roomkeys where keyId=".$pulledData['loanId']."")->fetchAll(PDO::FETCH_ASSOC);
-											foreach ($pullKey as $pulledKey)
-											{
-												echo $pulledKey['keyNumber'];
-											}
-										}
-										?>
-									</td>
-									<td><?=(new DateTime($pulledData['loanDate']))->format('d-m-Y');?></td>
-									<td>
-										<?php
-											$pullPersonnel=$connection->query("select * from personnel where personnelId=".$pulledData['lenderId']."")->fetchAll(PDO::FETCH_ASSOC);
-											foreach ($pullPersonnel as $pulledPersonnel)
-											{
-											echo $pulledPersonnel['nameSurname'];
-											}
-											?>
-									</td>
-									<td>
-										<?php
-											$pullPersonnel=$connection->query("select * from personnel where personnelId=".$pulledData['loanerId']."")->fetchAll(PDO::FETCH_ASSOC);
-											foreach ($pullPersonnel as $pulledPersonnel)
-											{
-											echo $pulledPersonnel['nameSurname'];
-											}
-											?>
-									</td>
-									<td>
-										<?php
-											if($pulledData['returnDate']=="0000-00-00"){echo 'İade Edilmedi';}
-											else{echo (new DateTime($pulledData['returnDate']))->format('d-m-Y');}
-											?>
-									</td>
-									<td>
-										<?php
-											if($pulledData['returnAccepterId']==NULL)
-											{
-												echo $lang["Not_Returned_Yet"];
-											
-											}
-											else
-											{
-												$pullPersonnel=$connection->query("select * from personnel where personnelId=".$pulledData['returnAccepterId']."")->fetchAll(PDO::FETCH_ASSOC);
-												foreach ($pullPersonnel as $pulledPersonnel)
-												{
-													echo $pulledPersonnel['nameSurname'];
-												}
-											
-											}
-											?>
-									</td>
-									<td>
-										<span class="button-group">
-										<a href="loans-return.php?productId=<?=$pulledData['loanId'];?>&type=<?=$pulledData['type'];?>&loanId=<?=$pulledData['loanId'];?>" onclick="alert('<?=$lang["Date_and_Repossesser_will_be_assigned_automatically"];?>')"class="fa fa-check"></a>
-										<a href="loans-edit.php?productId=<?=$pulledData['loanId'];?>" class="fa fa-pencil"></a>
-										<a href="loans-delete.php?productId=<?=$pulledData['loanId'];?>&type=<?=$pulledData['type'];?>&loanId=<?=$pulledData['loanId'];?>" onclick="alert('<?=$lang["This_loan_information_for_this_product_will_be_deleted_from_the_system"];?>')" class="fa fa-trash"></a>
-										</span>
-									</td>
-								</tr>
-								<?php } ?>
-							</tbody>
-						</table>
-						<?php
-							if(isset($_GET['returned']))
-							{
-								if($_GET['returned']!=NULL)
-								{
-									echo "<script>alert('"+$lang["You_cannot_return_a_returned_product_again"]+"');</script>";
-								}
-							}
-							
-							if(isset($_GET['notReturned']))
-							{
-								if($_GET['notReturned']!=NULL)
-								{
-									echo "<script>alert('"+$lang["Loan_information_of_the_non_returned_product_cannot_be_deleted_Please_return_it_first"]+"');</script>";
-								}
-							}
-						?>
-					</div>
-					
-				</div>
-				
-			</div>
-			
-		</div>
-		
-</section>
+    if ($action === 'add') {
+        $itemType = post_int('itemType');
+        $itemId = post_int('itemId');
+        $borrowerId = post_int('borrowerId');
+        $loanDate = DateTime::createFromFormat('!Y-m-d', post_string('loanDate', 10));
 
+        if ($itemType === null || !isset($itemTables[$itemType]) || $itemId === null || $borrowerId === null || !$loanDate) {
+            flash('danger', t('Fill_All_Fields'));
+            redirect('loans.php');
+        }
+
+        $item = $itemTables[$itemType];
+
+        $connection->beginTransaction();
+
+        // Lock the item row so two people cannot lend the same item at once.
+        $itemExists = $connection->prepare("SELECT 1 FROM {$item['table']} WHERE {$item['id']} = ? FOR UPDATE");
+        $itemExists->execute([$itemId]);
+
+        $borrowerExists = $connection->prepare('SELECT 1 FROM personnel WHERE personnelId = ?');
+        $borrowerExists->execute([$borrowerId]);
+
+        if (!$itemExists->fetchColumn() || !$borrowerExists->fetchColumn()) {
+            $connection->rollBack();
+            flash('danger', t('Process_Failed'));
+        } elseif (is_item_on_loan($connection, $itemType, $itemId)) {
+            $connection->rollBack();
+            flash('danger', t('Item_Already_Lent'));
+        } else {
+            $connection
+                ->prepare('INSERT INTO loans (itemType, itemId, loanDate, lenderId, borrowerId) VALUES (?, ?, ?, ?, ?)')
+                ->execute([$itemType, $itemId, $loanDate->format('Y-m-d'), $currentUser['personnelId'], $borrowerId]);
+            $connection->commit();
+            flash('success', t('Process_Successful'));
+        }
+    } elseif ($action === 'return') {
+        $statement = $connection->prepare(
+            'UPDATE loans SET returnDate = CURDATE(), receivedById = ? WHERE loanId = ? AND returnDate IS NULL'
+        );
+        $statement->execute([$currentUser['personnelId'], post_int('loanId')]);
+
+        $statement->rowCount() > 0
+            ? flash('success', t('Process_Successful'))
+            : flash('warning', t('Already_Returned'));
+    } elseif ($action === 'delete') {
+        // Only returned loans may be deleted, so an item can never vanish from the records while lent out.
+        $statement = $connection->prepare('DELETE FROM loans WHERE loanId = ? AND returnDate IS NOT NULL');
+        $statement->execute([post_int('loanId')]);
+
+        $statement->rowCount() > 0
+            ? flash('success', t('Record_Deleted'))
+            : flash('warning', t('Return_Before_Delete'));
+    }
+
+    redirect('loans.php');
+}
+
+$availableItems = [
+    ITEM_BOOK => $connection->query(
+        'SELECT bookId AS id, CONCAT(bookName, \' | \', bookAuthor) AS label FROM books
+          WHERE bookId NOT IN (SELECT itemId FROM loans WHERE itemType = 0 AND returnDate IS NULL)
+          ORDER BY bookName'
+    )->fetchAll(),
+    ITEM_COMPUTER => $connection->query(
+        'SELECT computerId AS id, CONCAT(manufacturer, \' \', model, \' | \', serialNumber) AS label FROM computers
+          WHERE computerId NOT IN (SELECT itemId FROM loans WHERE itemType = 1 AND returnDate IS NULL)
+          ORDER BY manufacturer, model'
+    )->fetchAll(),
+    ITEM_KEY => $connection->query(
+        'SELECT keyId AS id, CONCAT(keyNumber, \' | \', keyDescription) AS label FROM roomkeys
+          WHERE keyId NOT IN (SELECT itemId FROM loans WHERE itemType = 2 AND returnDate IS NULL)
+          ORDER BY keyNumber'
+    )->fetchAll(),
+];
+
+$personnel = $connection->query('SELECT personnelId, fullName FROM personnel ORDER BY fullName')->fetchAll();
+
+$loans = $connection->query(
+    'SELECT l.loanId, l.itemType, l.loanDate, l.returnDate,
+            CASE l.itemType
+                WHEN 0 THEN b.bookName
+                WHEN 1 THEN CONCAT(c.manufacturer, \' \', c.model)
+                WHEN 2 THEN k.keyNumber
+            END AS itemName,
+            lender.fullName AS lenderName,
+            borrower.fullName AS borrowerName,
+            receiver.fullName AS receiverName
+       FROM loans l
+       LEFT JOIN books b ON l.itemType = 0 AND b.bookId = l.itemId
+       LEFT JOIN computers c ON l.itemType = 1 AND c.computerId = l.itemId
+       LEFT JOIN roomkeys k ON l.itemType = 2 AND k.keyId = l.itemId
+       LEFT JOIN personnel lender ON lender.personnelId = l.lenderId
+       LEFT JOIN personnel borrower ON borrower.personnelId = l.borrowerId
+       LEFT JOIN personnel receiver ON receiver.personnelId = l.receivedById
+      ORDER BY (l.returnDate IS NULL) DESC, l.loanDate DESC, l.loanId DESC'
+)->fetchAll();
+
+$itemTabs = [
+    ITEM_BOOK     => ['id' => 'loanBook',     'placeholder' => t('Select_Book')],
+    ITEM_COMPUTER => ['id' => 'loanComputer', 'placeholder' => t('Select_Computer')],
+    ITEM_KEY      => ['id' => 'loanKey',      'placeholder' => t('Select_Key')],
+];
+
+$activePage = 'loans';
+$pageTitle = t('Loans');
+require __DIR__ . '/includes/header.php';
+?>
+<div class="box box-primary collapsed-box">
+    <div class="box-header with-border">
+        <h3 class="box-title"><?= e(t('New_Loan')) ?></h3>
+        <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+        </div>
+    </div>
+    <div class="box-body">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <?php foreach ($itemTabs as $type => $tab): ?>
+                    <li class="<?= $type === ITEM_BOOK ? 'active' : '' ?>">
+                        <a href="#<?= e($tab['id']) ?>" data-toggle="tab"><?= e(item_type_name($type)) ?></a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            <div class="tab-content">
+                <?php foreach ($itemTabs as $type => $tab): ?>
+                    <div class="tab-pane <?= $type === ITEM_BOOK ? 'active' : '' ?>" id="<?= e($tab['id']) ?>">
+                        <form method="post" action="loans.php" class="row">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="add">
+                            <input type="hidden" name="itemType" value="<?= e($type) ?>">
+                            <div class="col-md-4 form-group">
+                                <label><?= e(item_type_name($type)) ?></label>
+                                <select name="itemId" class="form-control" required>
+                                    <option value=""><?= e($tab['placeholder']) ?></option>
+                                    <?php foreach ($availableItems[$type] as $item): ?>
+                                        <option value="<?= e($item['id']) ?>"><?= e($item['label']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-3 form-group">
+                                <label><?= e(t('Borrower')) ?></label>
+                                <select name="borrowerId" class="form-control" required>
+                                    <option value=""><?= e(t('Select_Personnel')) ?></option>
+                                    <?php foreach ($personnel as $person): ?>
+                                        <option value="<?= e($person['personnelId']) ?>"><?= e($person['fullName']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-2 form-group">
+                                <label><?= e(t('Lender')) ?></label>
+                                <input type="text" class="form-control" readonly value="<?= e($currentUser['fullName']) ?>">
+                            </div>
+                            <div class="col-md-2 form-group">
+                                <label><?= e(t('Loan_Date')) ?></label>
+                                <input type="date" name="loanDate" class="form-control" required value="<?= e(date('Y-m-d')) ?>">
+                            </div>
+                            <div class="col-md-1 form-group">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-warning btn-block"><?= e(t('Save')) ?></button>
+                            </div>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
 </div>
 
-
-<?php 
-	include("footer.php");
-	include("scripts.php"); 
-?>
-<?php	} ?>
+<div class="box">
+    <div class="box-body table-responsive">
+        <table class="table table-bordered table-striped data-table">
+            <thead>
+            <tr>
+                <th><?= e(t('Type')) ?></th>
+                <th><?= e(t('Item')) ?></th>
+                <th><?= e(t('Loan_Date')) ?></th>
+                <th><?= e(t('Lender')) ?></th>
+                <th><?= e(t('Borrower')) ?></th>
+                <th><?= e(t('Return_Date')) ?></th>
+                <th><?= e(t('Received_By')) ?></th>
+                <th><?= e(t('Operations')) ?></th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($loans as $loan): ?>
+                <?php $isReturned = $loan['returnDate'] !== null; ?>
+                <tr>
+                    <td><?= e(item_type_name((int) $loan['itemType'])) ?></td>
+                    <td><?= e($loan['itemName'] ?? t('Deleted_Item')) ?></td>
+                    <td data-order="<?= e($loan['loanDate']) ?>"><?= e(format_date($loan['loanDate'])) ?></td>
+                    <td><?= e($loan['lenderName'] ?? t('Deleted_Personnel')) ?></td>
+                    <td><?= e($loan['borrowerName'] ?? t('Deleted_Personnel')) ?></td>
+                    <?php if ($isReturned): ?>
+                        <td data-order="<?= e($loan['returnDate']) ?>"><?= e(format_date($loan['returnDate'])) ?></td>
+                        <td><?= e($loan['receiverName'] ?? t('Deleted_Personnel')) ?></td>
+                    <?php else: ?>
+                        <td data-order=""><span class="label label-warning"><?= e(t('Not_Returned_Yet')) ?></span></td>
+                        <td></td>
+                    <?php endif; ?>
+                    <td class="text-nowrap">
+                        <?php if (!$isReturned): ?>
+                            <form method="post" action="loans.php" class="inline-form" data-confirm="<?= e(t('Confirm_Return')) ?>">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="return">
+                                <input type="hidden" name="loanId" value="<?= e($loan['loanId']) ?>">
+                                <button type="submit" class="btn btn-success btn-sm" title="<?= e(t('Mark_Returned')) ?>"><i class="fa fa-check"></i></button>
+                            </form>
+                        <?php else: ?>
+                            <form method="post" action="loans.php" class="inline-form" data-confirm="<?= e(t('Confirm_Delete_Loan')) ?>">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="loanId" value="<?= e($loan['loanId']) ?>">
+                                <button type="submit" class="btn btn-danger btn-sm" title="<?= e(t('Delete')) ?>"><i class="fa fa-trash"></i></button>
+                            </form>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php require __DIR__ . '/includes/footer.php'; ?>

@@ -1,0 +1,8 @@
+/* Small additions on top of AdminLTE. */
+.inline-form {
+    display: inline;
+}
+
+.login-page .alert {
+    margin-bottom: 15px;
+}

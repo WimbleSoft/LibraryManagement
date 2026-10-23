@@ -1,184 +1,205 @@
 <?php
-	session_start(); 
-	if((!isset($_SESSION["login"]))||($_SESSION["auth"]=="0")){
-	?>
-<meta http-equiv="refresh" content="0;URL=login.php">
-<?php
-	} else
-	{
-	?>
+require __DIR__ . '/includes/bootstrap.php';
 
-<?php 
-  include("header.php");
-  if(isset($_POST["add"]) && isset($_POST['nameSurname']) && isset($_POST['passWord']) && isset($_POST['eMail']) && isset($_POST['phone']) && isset($_POST['userName']))
-  {
-    $nameSurname=$_POST['nameSurname'];
-    $passWord=$_POST['passWord'];
-    $eMail=$_POST['eMail'];
-    $phone=$_POST['phone'];
-    $userName=$_POST['userName'];
-    if(isset($_POST['auth']) && $_POST['auth'] == "on")
-    { 
-        $auth=1;
-    } 
-    else
-    { 
-        $auth=0;
-    }
-    
-    $situation=$connection->query("insert into personnel  (userName,passWord,eMail,phone,nameSurname,auth) values ('$userName','$passWord','$eMail','$phone','$nameSurname','$auth')") or die ($lang["Something_bad_happened"]);
-  
-  
-    if($situation)
-    {
-      $status="<h2>".$lang["Process_Successful"]."</h2>";
-    }
-    else
-    {
-      $status="<h2>".$lang["Process_Failed"]."</h2>";
-    }
-  }
-  if(isset($_POST["update"]) && isset($_POST['personnelId']) && isset($_POST['nameSurname']) && isset($_POST['passWord']) && isset($_POST['eMail']) && isset($_POST['phone']) && isset($_POST['userName']))
-  {
-    $personnelId=$_POST['personnelId'];
-    $nameSurname=$_POST['nameSurname'];
-    $passWord=md5($_POST['passWord']);
-    $eMail=$_POST['eMail'];
-    $userName=$_POST['userName'];
-    $phone=$_POST['phone'];
-    if(isset($_POST['auth'])) 
-    { 
-        $auth=1;
-    } 
-    else 
-    { 
-        $auth=0;
-    }
-    if($_POST['passWord']=='')
-    {
-      $situation=$connection->query("UPDATE personnel set nameSurname='$nameSurname',eMail='$eMail',userName='$userName',auth='$auth',phone='$phone' where personnelId='$personnelId'") or die ($lang["Something_bad_happened"]);
-    }
-    else
-    {
-      $situation2=$connection->query("UPDATE personnel set nameSurname='$nameSurname',passWord='$passWord',eMail='$eMail',userName='$userName',auth='$auth',phone='$phone' where personnelId='$personnelId'") or die ($lang["Something_bad_happened"]);
-    }
-  }
+$currentUser = require_admin($connection);
 
+if (is_post()) {
+    verify_csrf();
+
+    $action = $_POST['action'] ?? '';
+    $personnelId = post_int('personnelId');
+    $isSelf = $personnelId === (int) $currentUser['personnelId'];
+
+    if ($action === 'add' || $action === 'update') {
+        $fullName = post_string('fullName', 100);
+        $username = post_string('username', 50);
+        $email = post_string('email', 100);
+        $phone = post_string('phone', 30);
+        $password = $_POST['password'] ?? '';
+        $password = is_string($password) ? $password : '';
+        // Administrators cannot remove their own admin rights and lock themselves out.
+        $isAdmin = ($isSelf || isset($_POST['isAdmin'])) ? 1 : 0;
+
+        if ($fullName === '' || $username === '' || ($action === 'add' && $password === '')) {
+            flash('danger', t('Fill_All_Fields'));
+        } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('danger', t('Invalid_Email'));
+        } elseif ($password !== '' && !is_valid_password($password)) {
+            flash('danger', t('Password_Too_Short'));
+        } else {
+            try {
+                if ($action === 'add') {
+                    $connection
+                        ->prepare('INSERT INTO personnel (username, password, fullName, email, phone, isAdmin) VALUES (?, ?, ?, ?, ?, ?)')
+                        ->execute([$username, hash_password($password), $fullName, $email, $phone, $isAdmin]);
+                } elseif ($personnelId !== null) {
+                    $connection
+                        ->prepare('UPDATE personnel SET username = ?, fullName = ?, email = ?, phone = ?, isAdmin = ? WHERE personnelId = ?')
+                        ->execute([$username, $fullName, $email, $phone, $isAdmin, $personnelId]);
+
+                    if ($password !== '') {
+                        $connection
+                            ->prepare('UPDATE personnel SET password = ? WHERE personnelId = ?')
+                            ->execute([hash_password($password), $personnelId]);
+                    }
+                }
+                flash('success', t('Process_Successful'));
+            } catch (PDOException $exception) {
+                if ($exception->getCode() !== '23000') {
+                    throw $exception;
+                }
+                flash('danger', t('Username_Taken'));
+            }
+        }
+    } elseif ($action === 'delete' && $personnelId !== null) {
+        $openLoans = $connection->prepare('SELECT 1 FROM loans WHERE borrowerId = ? AND returnDate IS NULL LIMIT 1');
+        $openLoans->execute([$personnelId]);
+
+        if ($isSelf) {
+            flash('danger', t('Cannot_Delete_Self'));
+        } elseif ($openLoans->fetchColumn()) {
+            flash('danger', t('Personnel_Has_Open_Loans'));
+        } else {
+            // Loan history is kept; the person is shown as "deleted personnel" there.
+            $connection->prepare('DELETE FROM personnel WHERE personnelId = ?')->execute([$personnelId]);
+            flash('success', t('Record_Deleted'));
+        }
+    }
+
+    redirect('personnel.php');
+}
+
+$personnel = $connection
+    ->query('SELECT personnelId, username, fullName, email, phone, isAdmin FROM personnel ORDER BY fullName')
+    ->fetchAll();
+
+$activePage = 'personnel';
+$pageTitle = t('Personnel');
+require __DIR__ . '/includes/header.php';
 ?>
-<script>
-	document.getElementById("personnel").className = "active";
-</script>
-<div class="content-wrapper">
-	<section class="content-header">
-		<h1>
-			<?=$lang["Personnel"];?>
-		</h1>
-		<ol class="breadcrumb">
-			<li class="active"><a href="#"><i class="fa fa-dashboard"></i> <?=$lang["Homepage"];?></a></li>
-			<li><a href="#"><?=$lang["Personnel"];?></a></li>
-		</ol>
-	</section>
-	<section class="content">
-		<div class="row">
-			<div class="col-xs-12">
-				<div class="box">
-					<div class="box-header">
-						<div class="col-md-12">
-							<div class="box box-default collapsed-box">
-								<div class="box-header with-border">
-									<h3 class="box-title"><?=$lang["Add_New_Personnel"];?></h3>
-									<div class="box-tools">
-										<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
-										</button>
-									</div>
-								</div>
-								<div class="box-body">
-									<form role="form" method="post" enctype="multipart/form-data" action="">
-										<div class="box-body">
-											<div class="form-group">
-												<div class="col-md-2">
-													<input name="nameSurname" type="text" id="nameSurname" class="form-control"  placeholder="<?=$lang["Enter_Name_Surname"];?>">
-												</div>
-												<div class="col-md-2">
-													<input name="phone" type="text" id="phone" class="form-control"  placeholder="<?=$lang["Enter_Phone"];?>">
-												</div>
-												<div class="col-md-2">
-													<input name="eMail" type="text" id="eMail" class="form-control" placeholder="<?=$lang["Enter_eMail"];?>">
-												</div>
-												<div class="col-md-1">
-													<input name="userName" type="text" id="userName" class="form-control" placeholder="<?=$lang["Enter_Username"];?>">
-												</div>
-												<div class="col-md-2">
-													<input name="passWord" type="password" id="passWord" class="form-control" placeholder="<?=$lang["Enter_Password"];?>">
-												</div>
-												<div class="col-md-2">
-													<div class="checkbox">
-														<label>
-														<input id="auth" name="auth" type="checkbox">
-														<?=$lang["Is_Admin"];?>
-														</label>
-													</div>
-												</div>
-												<div class="col-md-1">
-													<button type="submit" name="action" value="add" class="btn btn-primary"><?=$lang["Add_the_Personnel"];?></button>
-												</div>
-											</div>
-										</div>
-									</form>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="box-body">
-						<table id="example1" class="table table-bordered table-striped">
-							<thead>
-								<tr>
-									<th><?=$lang["Name_Surname"];?></th>
-									<th><?=$lang["Username"];?></th>
-									<th><?=$lang["eMail"];?></th>
-									<th><?=$lang["Phone"];?></th>
-									<th><?=$lang["Operations"];?></th>
-								</tr>
-							</thead>
-							<tbody>
-							<?php
-								$pullData=$connection->query("select * from personnel")->fetchAll(PDO::FETCH_ASSOC);
-								foreach ($pullData as $pulledData)
-								{
-								?>
-								<tr>
-									<td><?=$pulledData['nameSurname'];?></td>
-									<td><?=$pulledData['userName'];?></td>
-									<td><?=$pulledData['eMail'];?></td>
-									<td><?=$pulledData['phone'];?></td>
-									<td>
-										<span class="button-group">
-										<a href="#" data-target="personnelEdit_<?=$pulledData['personnelId'];?>" date-toggle="modal" class="fa fa-pencil"></a>
-										<a href="personnel.php?action=delete&personnelId=<?=$pulledData['personnelId'];?>" onclick="return confirm('<?=$lang['Are_you_sure_to_delete'];?>');" class="fa fa-trash"></a>
-										</span>
-									</td>
-								</tr>
-							<?php 
-							}
-							?>
-							</tbody>
-						</table>
-					</div>
-					
-				</div>
-				
-			</div>
-			
-		</div>
-		
-	</section>
-	
+<div class="box box-primary collapsed-box">
+    <div class="box-header with-border">
+        <h3 class="box-title"><?= e(t('Add_New_Personnel')) ?></h3>
+        <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+        </div>
+    </div>
+    <div class="box-body">
+        <form method="post" action="personnel.php" class="row">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="add">
+            <div class="col-md-2 form-group">
+                <input name="fullName" type="text" class="form-control" maxlength="100" required placeholder="<?= e(t('Enter_Full_Name')) ?>">
+            </div>
+            <div class="col-md-2 form-group">
+                <input name="phone" type="tel" class="form-control" maxlength="30" placeholder="<?= e(t('Enter_Phone')) ?>">
+            </div>
+            <div class="col-md-2 form-group">
+                <input name="email" type="email" class="form-control" maxlength="100" placeholder="<?= e(t('Enter_Email')) ?>">
+            </div>
+            <div class="col-md-2 form-group">
+                <input name="username" type="text" class="form-control" maxlength="50" required autocomplete="off" placeholder="<?= e(t('Enter_Username')) ?>">
+            </div>
+            <div class="col-md-2 form-group">
+                <input name="password" type="password" class="form-control" minlength="8" required autocomplete="new-password" placeholder="<?= e(t('Enter_Password')) ?>">
+            </div>
+            <div class="col-md-1 form-group">
+                <div class="checkbox">
+                    <label><input name="isAdmin" type="checkbox" value="1"> <?= e(t('Admin')) ?></label>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary btn-block"><?= e(t('Add')) ?></button>
+            </div>
+        </form>
+    </div>
 </div>
 
+<div class="box">
+    <div class="box-body table-responsive">
+        <table class="table table-bordered table-striped data-table">
+            <thead>
+            <tr>
+                <th><?= e(t('Full_Name')) ?></th>
+                <th><?= e(t('Username')) ?></th>
+                <th><?= e(t('Email')) ?></th>
+                <th><?= e(t('Phone')) ?></th>
+                <th><?= e(t('Admin')) ?></th>
+                <th><?= e(t('Operations')) ?></th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($personnel as $person): ?>
+                <?php $isSelf = (int) $person['personnelId'] === (int) $currentUser['personnelId']; ?>
+                <tr>
+                    <td><?= e($person['fullName']) ?></td>
+                    <td><?= e($person['username']) ?></td>
+                    <td><?= e($person['email']) ?></td>
+                    <td><?= e($person['phone']) ?></td>
+                    <td><?= (int) $person['isAdmin'] === 1 ? '<i class="fa fa-check text-green"></i>' : '' ?></td>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editPersonnel<?= e($person['personnelId']) ?>" title="<?= e(t('Edit')) ?>">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <?php if (!$isSelf): ?>
+                            <form method="post" action="personnel.php" class="inline-form" data-confirm="<?= e(t('Confirm_Delete')) ?>">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="personnelId" value="<?= e($person['personnelId']) ?>">
+                                <button type="submit" class="btn btn-danger btn-sm" title="<?= e(t('Delete')) ?>"><i class="fa fa-trash"></i></button>
+                            </form>
+                        <?php endif; ?>
 
-<?php 
-	include("footer.php"); 
-	include("scripts.php"); 
-	?>
-
-<?php	} ?>
+                        <div class="modal fade" id="editPersonnel<?= e($person['personnelId']) ?>" tabindex="-1" role="dialog">
+                            <div class="modal-dialog" role="document">
+                                <form method="post" action="personnel.php" class="modal-content">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="personnelId" value="<?= e($person['personnelId']) ?>">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="<?= e(t('Close')) ?>">&times;</button>
+                                        <h4 class="modal-title"><?= e(t('Edit_Personnel')) ?></h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="form-group">
+                                            <label><?= e(t('Full_Name')) ?></label>
+                                            <input name="fullName" type="text" class="form-control" maxlength="100" required value="<?= e($person['fullName']) ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label><?= e(t('Phone')) ?></label>
+                                            <input name="phone" type="tel" class="form-control" maxlength="30" value="<?= e($person['phone']) ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label><?= e(t('Email')) ?></label>
+                                            <input name="email" type="email" class="form-control" maxlength="100" value="<?= e($person['email']) ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label><?= e(t('Username')) ?></label>
+                                            <input name="username" type="text" class="form-control" maxlength="50" required autocomplete="off" value="<?= e($person['username']) ?>">
+                                        </div>
+                                        <div class="form-group">
+                                            <label><?= e(t('Password')) ?></label>
+                                            <input name="password" type="password" class="form-control" minlength="8" autocomplete="new-password" placeholder="<?= e(t('Leave_Blank_To_Keep_Password')) ?>">
+                                        </div>
+                                        <div class="checkbox">
+                                            <label>
+                                                <input name="isAdmin" type="checkbox" value="1" <?= (int) $person['isAdmin'] === 1 ? 'checked' : '' ?> <?= $isSelf ? 'disabled' : '' ?>>
+                                                <?= e(t('Is_Admin')) ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal"><?= e(t('Cancel')) ?></button>
+                                        <button type="submit" class="btn btn-warning"><?= e(t('Save')) ?></button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php require __DIR__ . '/includes/footer.php'; ?>
