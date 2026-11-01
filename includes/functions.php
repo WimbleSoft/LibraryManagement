@@ -311,16 +311,26 @@ function client_ip(): string
     return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
 }
 
+/**
+ * Sign-in is locked when this username has failed too often from this IP
+ * address, or when this IP address has failed too often in total.
+ *
+ * Failures from other addresses never count, so nobody can lock a real
+ * user out just by typing wrong passwords for their username.
+ */
 function is_login_locked(PDO $connection, string $username, array $config): bool
 {
     $statement = $connection->prepare(
-        'SELECT COUNT(*) FROM login_attempts
-          WHERE (username = ? OR ipAddress = ?)
+        'SELECT COALESCE(SUM(username = ?), 0) AS pairFailures, COUNT(*) AS ipFailures
+           FROM login_attempts
+          WHERE ipAddress = ?
             AND attemptedAt > (NOW() - INTERVAL ? SECOND)'
     );
     $statement->execute([$username, client_ip(), $config['login_lockout_seconds']]);
+    $counts = $statement->fetch();
 
-    return (int) $statement->fetchColumn() >= $config['login_max_attempts'];
+    return (int) $counts['pairFailures'] >= $config['login_max_attempts']
+        || (int) $counts['ipFailures'] >= $config['login_max_attempts_per_ip'];
 }
 
 function record_failed_login(PDO $connection, string $username): void
@@ -333,8 +343,11 @@ function record_failed_login(PDO $connection, string $username): void
 function clear_failed_logins(PDO $connection, string $username): void
 {
     $connection
-        ->prepare('DELETE FROM login_attempts WHERE username = ? OR attemptedAt < (NOW() - INTERVAL 1 DAY)')
-        ->execute([$username]);
+        ->prepare(
+            'DELETE FROM login_attempts
+              WHERE (username = ? AND ipAddress = ?) OR attemptedAt < (NOW() - INTERVAL 1 DAY)'
+        )
+        ->execute([$username, client_ip()]);
 }
 
 /* ------------------------------------------------------------------

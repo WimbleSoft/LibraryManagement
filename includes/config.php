@@ -19,8 +19,10 @@ return [
     'languages'        => ['en', 'tr'],
     'default_language' => 'en',
 
-    // Sign-in throttling: lock the username/IP pair after this many
-    // failures for the given number of seconds.
-    'login_max_attempts'   => 5,
-    'login_lockout_seconds' => 900,
+    // Sign-in throttling: lock a username/IP pair after this many
+    // failures, and an IP address after this many failures for any
+    // username, for the given number of seconds.
+    'login_max_attempts'        => 5,
+    'login_max_attempts_per_ip' => 20,
+    'login_lockout_seconds'     => 900,
 ];

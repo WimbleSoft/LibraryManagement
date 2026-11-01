@@ -12,7 +12,9 @@ public issue.
 - Every form, including delete and sign-out, is a POST request with a CSRF token.
 - Passwords are stored with `password_hash()`. Old MD5 hashes are upgraded
   automatically on the next successful sign-in.
-- Failed sign-ins are throttled per username and IP address.
+- Failed sign-ins are throttled: 5 failures for one username from one IP
+  address, or 20 from one IP address in total, block further attempts for
+  15 minutes. Failures from other addresses never lock a user out.
 - Sessions use strict mode, `HttpOnly` and `SameSite=Strict` cookies (`Secure` over HTTPS),
   and the session id changes on sign-in.
 - The language switcher only accepts known language codes, so it cannot be
@@ -47,8 +49,11 @@ PHP is exposed.
      CVE-2026-109619, so upgrading is still required.
 
 This repository already applies the per-directory workarounds: the
-`.htaccess` file (Apache with mod_php) and the `.user.ini` file (PHP-FPM/CGI)
-turn off session upload progress, cap `post_max_size` at 1 MB, and limit
-request bodies to 1 MB. The application has no file uploads and its forms do
+`.htaccess` file (Apache), the `.user.ini` file (PHP-FPM/CGI) and the example
+`deploy/nginx.conf` (Nginx) turn off session upload progress, cap
+`post_max_size` at 1 MB, and refuse request bodies over 1 MB before PHP sees
+them. `tests/server/run.sh` checks this on all three setups. Note that
+PHP-FPM does not enforce a `post_max_size` set in `.user.ini`, so behind
+PHP-FPM the web server's limit is the one that counts. The application has no file uploads and its forms do
 not use multipart encoding. **These settings reduce the risk but do not
 replace upgrading PHP.**
