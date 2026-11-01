@@ -1,19 +1,21 @@
 # ------------------------------------------------------------------
 # Apache hardening for Library Records.
+# Nginx does not read this file; see deploy/nginx.conf instead.
 # ------------------------------------------------------------------
 
 Options -Indexes
 
-# Never serve the code-only folders, database dumps or dotfiles.
-RedirectMatch 404 ^/(.*/)?(includes|lang|database)(/|$)
-<FilesMatch "(^\.|\.(sql|md|ini|log)$)">
+# Never serve dot-folders such as .git, code-only folders or deploy files.
+RedirectMatch 404 ^/(.*/)?\.(?!well-known/)
+RedirectMatch 404 ^/(.*/)?(includes|lang|database|deploy|tests)(/|$)
+<FilesMatch "(^\.|\.(sql|md|ini|log|yml|yaml|sh|conf)$)">
     Require all denied
 </FilesMatch>
 
 # PHP settings (mod_php only; PHP-FPM/CGI read .user.ini instead).
+# expose_php can only be turned off in php.ini, not here.
 <IfModule mod_php.c>
     php_flag display_errors Off
-    php_flag expose_php Off
     php_flag session.use_strict_mode On
     php_flag session.cookie_httponly On
     # PHP2Shell (CVE-2026-109618 / CVE-2026-109619) workarounds.
@@ -24,4 +26,11 @@ RedirectMatch 404 ^/(.*/)?(includes|lang|database)(/|$)
 </IfModule>
 
 # Reject oversized request bodies before PHP parses them.
+# LimitRequestBody alone is not enough when PHP runs under PHP-FPM
+# (mod_proxy_fcgi passed a 2 MB body straight through in testing), so
+# large or chunked bodies are also refused by their headers. The app's
+# forms are small and browsers always send Content-Length for them.
 LimitRequestBody 1048576
+<If "%{HTTP:Content-Length} -gt 1048576 || -n %{HTTP:Transfer-Encoding}">
+    Require all denied
+</If>
