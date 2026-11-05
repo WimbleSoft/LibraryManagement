@@ -19,6 +19,11 @@ if (is_post()) {
         $password = is_string($password) ? $password : '';
         // Administrators cannot remove their own admin rights and lock themselves out.
         $isAdmin = ($isSelf || isset($_POST['isAdmin'])) ? 1 : 0;
+        // Likewise they cannot deactivate themselves.
+        $isActive = ($action === 'add' || $isSelf || isset($_POST['isActive'])) ? 1 : 0;
+
+        $openLoans = $connection->prepare('SELECT 1 FROM loans WHERE borrowerId = ? AND returnDate IS NULL LIMIT 1');
+        $openLoans->execute([$personnelId ?? 0]);
 
         if ($fullName === '' || $username === '' || ($action === 'add' && $password === '')) {
             flash('danger', t('Fill_All_Fields'));
@@ -26,6 +31,9 @@ if (is_post()) {
             flash('danger', t('Invalid_Email'));
         } elseif ($password !== '' && !is_valid_password($password)) {
             flash('danger', t('Password_Too_Short'));
+        } elseif ($action === 'update' && $isActive === 0 && $openLoans->fetchColumn()) {
+            // Someone who is leaving must hand everything back (or have it marked lost) first.
+            flash('danger', t('Personnel_Has_Open_Loans'));
         } else {
             try {
                 if ($action === 'add') {
@@ -34,8 +42,8 @@ if (is_post()) {
                         ->execute([$username, hash_password($password), $fullName, $email, $phone, $isAdmin]);
                 } elseif ($personnelId !== null) {
                     $connection
-                        ->prepare('UPDATE personnel SET username = ?, fullName = ?, email = ?, phone = ?, isAdmin = ? WHERE personnelId = ?')
-                        ->execute([$username, $fullName, $email, $phone, $isAdmin, $personnelId]);
+                        ->prepare('UPDATE personnel SET username = ?, fullName = ?, email = ?, phone = ?, isAdmin = ?, isActive = ? WHERE personnelId = ?')
+                        ->execute([$username, $fullName, $email, $phone, $isAdmin, $isActive, $personnelId]);
 
                     if ($password !== '') {
                         $connection
@@ -52,15 +60,17 @@ if (is_post()) {
             }
         }
     } elseif ($action === 'delete' && $personnelId !== null) {
-        $openLoans = $connection->prepare('SELECT 1 FROM loans WHERE borrowerId = ? AND returnDate IS NULL LIMIT 1');
-        $openLoans->execute([$personnelId]);
+        // Anyone who appears in the loan history is kept, so the history stays readable.
+        $history = $connection->prepare(
+            'SELECT 1 FROM loans WHERE borrowerId = ? OR lenderId = ? OR receivedById = ? LIMIT 1'
+        );
+        $history->execute([$personnelId, $personnelId, $personnelId]);
 
         if ($isSelf) {
             flash('danger', t('Cannot_Delete_Self'));
-        } elseif ($openLoans->fetchColumn()) {
-            flash('danger', t('Personnel_Has_Open_Loans'));
+        } elseif ($history->fetchColumn()) {
+            flash('warning', t('Personnel_Has_History_Deactivate_Instead'));
         } else {
-            // Loan history is kept; the person is shown as "deleted personnel" there.
             $connection->prepare('DELETE FROM personnel WHERE personnelId = ?')->execute([$personnelId]);
             flash('success', t('Record_Deleted'));
         }
@@ -70,7 +80,7 @@ if (is_post()) {
 }
 
 $personnel = $connection
-    ->query('SELECT personnelId, username, fullName, email, phone, isAdmin FROM personnel ORDER BY fullName')
+    ->query('SELECT personnelId, username, fullName, email, phone, isAdmin, isActive FROM personnel ORDER BY isActive DESC, fullName')
     ->fetchAll();
 
 $activePage = 'personnel';
@@ -125,6 +135,7 @@ require __DIR__ . '/includes/header.php';
                 <th><?= e(t('Email')) ?></th>
                 <th><?= e(t('Phone')) ?></th>
                 <th><?= e(t('Admin')) ?></th>
+                <th><?= e(t('Status')) ?></th>
                 <th><?= e(t('Operations')) ?></th>
             </tr>
             </thead>
@@ -137,6 +148,13 @@ require __DIR__ . '/includes/header.php';
                     <td><?= e($person['email']) ?></td>
                     <td><?= e($person['phone']) ?></td>
                     <td><?= (int) $person['isAdmin'] === 1 ? '<i class="fa fa-check text-green"></i>' : '' ?></td>
+                    <td>
+                        <?php if ((int) $person['isActive'] === 1): ?>
+                            <span class="label label-success"><?= e(t('Active')) ?></span>
+                        <?php else: ?>
+                            <span class="label label-default"><?= e(t('Inactive')) ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td class="text-nowrap">
                         <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editPersonnel<?= e($person['personnelId']) ?>" title="<?= e(t('Edit')) ?>">
                             <i class="fa fa-pencil"></i>
@@ -186,6 +204,13 @@ require __DIR__ . '/includes/header.php';
                                                 <input name="isAdmin" type="checkbox" value="1" <?= (int) $person['isAdmin'] === 1 ? 'checked' : '' ?> <?= $isSelf ? 'disabled' : '' ?>>
                                                 <?= e(t('Is_Admin')) ?>
                                             </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label>
+                                                <input name="isActive" type="checkbox" value="1" <?= (int) $person['isActive'] === 1 ? 'checked' : '' ?> <?= $isSelf ? 'disabled' : '' ?>>
+                                                <?= e(t('Is_Active')) ?>
+                                            </label>
+                                            <p class="help-block"><?= e(t('Is_Active_Help')) ?></p>
                                         </div>
                                     </div>
                                     <div class="modal-footer">

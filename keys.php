@@ -19,20 +19,22 @@ if (is_post()) {
                 ->prepare('INSERT INTO roomkeys (keyNumber, keyDescription) VALUES (?, ?)')
                 ->execute([$keyNumber, $keyDescription]);
             flash('success', t('Process_Successful'));
+        } elseif ($keyId !== null && ($status = posted_item_status($connection, ITEM_KEY, $keyId)) === null) {
+            flash('danger', t('Status_Not_Allowed'));
         } elseif ($keyId !== null) {
             $connection
-                ->prepare('UPDATE roomkeys SET keyNumber = ?, keyDescription = ? WHERE keyId = ?')
-                ->execute([$keyNumber, $keyDescription, $keyId]);
+                ->prepare('UPDATE roomkeys SET keyNumber = ?, keyDescription = ?, status = ? WHERE keyId = ?')
+                ->execute([$keyNumber, $keyDescription, $status, $keyId]);
             flash('success', t('Process_Successful'));
         }
     } elseif ($action === 'delete' && $keyId !== null) {
-        delete_item($connection, 'roomkeys', 'keyId', ITEM_KEY, $keyId);
+        delete_item($connection, ITEM_KEY, $keyId);
     }
 
     redirect('keys.php');
 }
 
-$keys = $connection->query('SELECT keyId, keyNumber, keyDescription FROM roomkeys ORDER BY keyNumber')->fetchAll();
+$keys = $connection->query('SELECT keyId, keyNumber, keyDescription, status FROM roomkeys ORDER BY keyNumber')->fetchAll();
 $openLoans = open_loans_by_item($connection, ITEM_KEY);
 
 $activePage = 'keys';
@@ -76,7 +78,10 @@ require __DIR__ . '/includes/header.php';
             </thead>
             <tbody>
             <?php foreach ($keys as $key): ?>
-                <?php $loan = $openLoans[(int) $key['keyId']] ?? null; ?>
+                <?php
+                $loan = $openLoans[(int) $key['keyId']] ?? null;
+                $itemStatus = (int) $key['status'];
+                ?>
                 <tr>
                     <td><?= e($key['keyNumber']) ?></td>
                     <td><?= e($key['keyDescription']) ?></td>
@@ -111,6 +116,7 @@ require __DIR__ . '/includes/header.php';
                                             <label><?= e(t('Description')) ?></label>
                                             <input name="keyDescription" type="text" class="form-control" maxlength="255" required value="<?= e($key['keyDescription']) ?>">
                                         </div>
+                                        <?php require __DIR__ . '/includes/item-status-field.php'; ?>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-default" data-dismiss="modal"><?= e(t('Cancel')) ?></button>

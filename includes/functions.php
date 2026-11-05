@@ -10,6 +10,34 @@ const ITEM_BOOK     = 0;
 const ITEM_COMPUTER = 1;
 const ITEM_KEY      = 2;
 
+// Item status, stored in books.status, computers.status and roomkeys.status.
+const ITEM_STATUS_ACTIVE    = 0;
+const ITEM_STATUS_IN_REPAIR = 1;
+const ITEM_STATUS_RETIRED   = 2;
+const ITEM_STATUS_LOST      = 3;
+
+// How an item came back, stored in loans.returnCondition.
+const RETURN_GOOD       = 0;
+const RETURN_DAMAGED    = 1;
+const RETURN_INCOMPLETE = 2;
+const RETURN_LOST       = 3;
+
+// Where each item type lives.
+const ITEM_TABLES = [
+    ITEM_BOOK     => ['table' => 'books',     'id' => 'bookId'],
+    ITEM_COMPUTER => ['table' => 'computers', 'id' => 'computerId'],
+    ITEM_KEY      => ['table' => 'roomkeys',  'id' => 'keyId'],
+];
+
+// Lending rules used when the settings table has no value.
+const DEFAULT_LENDING_RULES = [
+    'loanDaysBook'     => 21,
+    'loanDaysComputer' => 14,
+    'loanDaysKey'      => 1,
+    'maxOpenLoans'     => 5,
+    'blockWhenOverdue' => 1,
+];
+
 /* ------------------------------------------------------------------
  * Start-up
  * ------------------------------------------------------------------ */
@@ -134,6 +162,38 @@ function item_type_name(int $type): string
     }
 }
 
+function item_status_name(int $status): string
+{
+    switch ($status) {
+        case ITEM_STATUS_ACTIVE:
+            return t('Status_Active');
+        case ITEM_STATUS_IN_REPAIR:
+            return t('Status_In_Repair');
+        case ITEM_STATUS_RETIRED:
+            return t('Status_Retired');
+        case ITEM_STATUS_LOST:
+            return t('Status_Lost');
+        default:
+            return t('Unknown');
+    }
+}
+
+function return_condition_name(int $condition): string
+{
+    switch ($condition) {
+        case RETURN_GOOD:
+            return t('Condition_Good');
+        case RETURN_DAMAGED:
+            return t('Condition_Damaged');
+        case RETURN_INCOMPLETE:
+            return t('Condition_Incomplete');
+        case RETURN_LOST:
+            return t('Condition_Lost');
+        default:
+            return t('Unknown');
+    }
+}
+
 function format_date(?string $date): string
 {
     if ($date === null || $date === '') {
@@ -225,8 +285,8 @@ function verify_csrf(): void
 
 /**
  * Makes sure an administrator is signed in and returns their record.
- * The record is re-read on every request so that deleted or demoted
- * accounts lose access immediately.
+ * The record is re-read on every request so that deleted, demoted or
+ * deactivated accounts lose access immediately.
  */
 function require_admin(PDO $connection): array
 {
@@ -236,13 +296,13 @@ function require_admin(PDO $connection): array
     }
 
     $statement = $connection->prepare(
-        'SELECT personnelId, username, fullName, email, phone, isAdmin
+        'SELECT personnelId, username, fullName, email, phone, isAdmin, isActive
            FROM personnel WHERE personnelId = ?'
     );
     $statement->execute([$personnelId]);
     $user = $statement->fetch();
 
-    if (!$user || (int) $user['isAdmin'] !== 1) {
+    if (!$user || (int) $user['isAdmin'] !== 1 || (int) $user['isActive'] !== 1) {
         sign_out();
         redirect('login.php');
     }
@@ -372,7 +432,7 @@ function is_item_on_loan(PDO $connection, int $itemType, int $itemId): bool
 function open_loans_by_item(PDO $connection, int $itemType): array
 {
     $statement = $connection->prepare(
-        'SELECT l.itemId, l.loanDate, borrower.fullName AS borrowerName, lender.fullName AS lenderName
+        'SELECT l.itemId, l.loanDate, l.dueDate, borrower.fullName AS borrowerName, lender.fullName AS lenderName
            FROM loans l
            LEFT JOIN personnel borrower ON borrower.personnelId = l.borrowerId
            LEFT JOIN personnel lender ON lender.personnelId = l.lenderId
@@ -388,19 +448,146 @@ function open_loans_by_item(PDO $connection, int $itemType): array
     return $loans;
 }
 
-/** Deletes an item and its loan history, unless it is currently on loan. */
-function delete_item(PDO $connection, string $table, string $idColumn, int $itemType, int $itemId): void
+/** Returns true when the item has ever been lent. */
+function item_has_loan_history(PDO $connection, int $itemType, int $itemId): bool
 {
+    $statement = $connection->prepare('SELECT 1 FROM loans WHERE itemType = ? AND itemId = ? LIMIT 1');
+    $statement->execute([$itemType, $itemId]);
+
+    return (bool) $statement->fetchColumn();
+}
+
+/**
+ * Deletes an item that was entered by mistake. Items that have ever been
+ * lent are kept so their loan history stays complete; they can be retired
+ * instead.
+ */
+function delete_item(PDO $connection, int $itemType, int $itemId): void
+{
+    $item = ITEM_TABLES[$itemType];
+
     if (is_item_on_loan($connection, $itemType, $itemId)) {
         flash('danger', t('Item_On_Loan_Cannot_Delete'));
 
         return;
     }
 
-    $connection->beginTransaction();
-    $connection->prepare("DELETE FROM {$table} WHERE {$idColumn} = ?")->execute([$itemId]);
-    $connection->prepare('DELETE FROM loans WHERE itemType = ? AND itemId = ?')->execute([$itemType, $itemId]);
-    $connection->commit();
+    if (item_has_loan_history($connection, $itemType, $itemId)) {
+        flash('warning', t('Item_Has_History_Retire_Instead'));
 
+        return;
+    }
+
+    $connection->prepare("DELETE FROM {$item['table']} WHERE {$item['id']} = ?")->execute([$itemId]);
     flash('success', t('Record_Deleted'));
+}
+
+/**
+ * Reads the posted item status. Returns null when it is missing or
+ * unknown. An item on loan must stay active: close the loan first.
+ */
+function posted_item_status(PDO $connection, int $itemType, ?int $itemId): ?int
+{
+    $status = post_int('status');
+    $valid = [ITEM_STATUS_ACTIVE, ITEM_STATUS_IN_REPAIR, ITEM_STATUS_RETIRED, ITEM_STATUS_LOST];
+
+    if ($status === null || !in_array($status, $valid, true)) {
+        return null;
+    }
+
+    if ($status !== ITEM_STATUS_ACTIVE && $itemId !== null && is_item_on_loan($connection, $itemType, $itemId)) {
+        return null;
+    }
+
+    return $status;
+}
+
+/* ------------------------------------------------------------------
+ * Lending rules and due dates
+ * ------------------------------------------------------------------ */
+
+/** Returns the lending rules from the settings table, with defaults for missing values. */
+function lending_rules(PDO $connection): array
+{
+    $rules = DEFAULT_LENDING_RULES;
+
+    foreach ($connection->query('SELECT name, value FROM settings') as $row) {
+        if (array_key_exists($row['name'], $rules)) {
+            $rules[$row['name']] = (int) $row['value'];
+        }
+    }
+
+    return $rules;
+}
+
+function save_lending_rules(PDO $connection, array $rules): void
+{
+    $statement = $connection->prepare(
+        'INSERT INTO settings (name, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)'
+    );
+
+    foreach ($rules as $name => $value) {
+        if (array_key_exists($name, DEFAULT_LENDING_RULES)) {
+            $statement->execute([$name, (string) (int) $value]);
+        }
+    }
+}
+
+/** The standard loan period in days for an item type. */
+function loan_days(array $rules, int $itemType): int
+{
+    $names = [ITEM_BOOK => 'loanDaysBook', ITEM_COMPUTER => 'loanDaysComputer', ITEM_KEY => 'loanDaysKey'];
+
+    return max(0, (int) ($rules[$names[$itemType] ?? ''] ?? 0));
+}
+
+/** Parses a posted Y-m-d date. Returns null when it is empty or invalid. */
+function post_date(string $name): ?DateTimeImmutable
+{
+    $value = post_string($name, 10);
+    $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+
+    return ($date && $date->format('Y-m-d') === $value) ? $date : null;
+}
+
+function today(): DateTimeImmutable
+{
+    return new DateTimeImmutable('today');
+}
+
+/** True when an open loan is past its due date. */
+function is_overdue(?string $dueDate, ?string $returnDate): bool
+{
+    return $returnDate === null && $dueDate !== null && $dueDate < today()->format('Y-m-d');
+}
+
+/** Number of whole days a loan is past its due date. */
+function days_overdue(string $dueDate): int
+{
+    return (int) (new DateTimeImmutable($dueDate))->diff(today())->format('%r%a');
+}
+
+/**
+ * Checks the borrowing limits for a person. Returns the translated reason
+ * when a new loan should be refused, or null when it is allowed.
+ */
+function borrowing_limit_reason(PDO $connection, array $rules, int $borrowerId): ?string
+{
+    $statement = $connection->prepare(
+        'SELECT COUNT(*) AS openLoans,
+                SUM(dueDate IS NOT NULL AND dueDate < ?) AS overdueLoans
+           FROM loans WHERE borrowerId = ? AND returnDate IS NULL'
+    );
+    $statement->execute([today()->format('Y-m-d'), $borrowerId]);
+    $counts = $statement->fetch();
+
+    if ($rules['blockWhenOverdue'] && (int) $counts['overdueLoans'] > 0) {
+        return t('Borrower_Has_Overdue');
+    }
+
+    if ($rules['maxOpenLoans'] > 0 && (int) $counts['openLoans'] >= $rules['maxOpenLoans']) {
+        return sprintf(t('Borrower_At_Limit'), $rules['maxOpenLoans']);
+    }
+
+    return null;
 }

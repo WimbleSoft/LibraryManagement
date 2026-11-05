@@ -21,7 +21,7 @@ if (is_post()) {
         $error = t('Too_Many_Login_Attempts');
     } else {
         $statement = $connection->prepare(
-            'SELECT personnelId, password, isAdmin FROM personnel WHERE username = ?'
+            'SELECT personnelId, password, isAdmin, isActive FROM personnel WHERE username = ?'
         );
         $statement->execute([$username]);
         $user = $statement->fetch();
@@ -39,7 +39,7 @@ if (is_post()) {
                     ->execute([hash_password($password), $user['personnelId']]);
             }
 
-            if ((int) $user['isAdmin'] === 1) {
+            if ((int) $user['isAdmin'] === 1 && (int) $user['isActive'] === 1) {
                 clear_failed_logins($connection, $username);
                 sign_in($user);
                 redirect('index.php');

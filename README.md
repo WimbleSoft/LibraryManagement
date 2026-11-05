@@ -3,6 +3,25 @@
 A small PHP web application for keeping track of a library's books, computers
 and room keys, and of who has borrowed them.
 
+## Lending rules
+
+- Every loan has a **due date**. Leave it empty to use the standard loan
+  period for the item type (books 21 days, computers 14, keys 1 by default).
+  Overdue loans are listed on the dashboard and under *Loans → Overdue*.
+- New loans are refused when the borrower already has the maximum number of
+  items (5 by default) or has an overdue item. Tick *Lend even if…* on the
+  loan form to make an exception. Change the periods and limits under
+  *Settings → Lending Rules*.
+- A return records the actual return date, the item's condition and a note.
+  Items returned **damaged** are set to *In repair* and cannot be lent until
+  they are set back to *Active*.
+- A loan can be closed as **lost**, with an optional replacement cost. The
+  item is then marked *Lost*.
+- History is never deleted. Loans cannot be deleted. Items and staff that
+  appear in the loan history cannot be deleted either: set an item's status
+  to *Retired*, or untick *Active* for a person who has left. Inactive staff
+  cannot borrow or sign in.
+
 ## Requirements
 
 - PHP 8.2 or newer with the `pdo_mysql` and `mbstring` extensions,
@@ -49,16 +68,19 @@ and room keys, and of who has borrowed them.
 Set `expose_php = Off` in your server's `php.ini`; it cannot be changed from
 `.htaccess` or `.user.ini`.
 
-### Upgrading from version 1
+### Upgrading
 
-Back up your database, then run the upgrade script once:
+Back up your database, then run each upgrade script you need once, in order:
 
 ```sh
-mysql -u root -p libraryrecords < database/upgrade-v1-to-v2.sql
+mysql -u root -p libraryrecords < database/upgrade-v1-to-v2.sql   # from version 1
+mysql -u root -p libraryrecords < database/upgrade-v2-to-v3.sql   # from version 2
 ```
 
-Existing passwords keep working and are converted to secure hashes the next
-time each person signs in.
+From version 1, existing passwords keep working and are converted to secure
+hashes the next time each person signs in. From version 2, loans that are
+already open get no due date, so they are never shown as overdue; give them
+one with the calendar button on the *Loans* page.
 
 ## Project structure
 
@@ -67,9 +89,10 @@ time each person signs in.
 | `*.php` (root)          | One file per screen; each also handles that screen's forms   |
 | `includes/`             | Start-up code, configuration, helpers and the page layout    |
 | `lang/`                 | Interface translations (`en`, `tr`)                          |
-| `database/`             | Schema for new installs and the version 1 upgrade script     |
+| `database/`             | Schema for new installs and the upgrade scripts              |
 | `deploy/`               | Example Nginx configuration                                  |
 | `tests/server/`         | Checks the server hardening on Apache, PHP-FPM and Nginx     |
+| `tests/app/`            | Checks the lending rules end to end                          |
 | `assets/`               | The application's own CSS and JavaScript                     |
 | `dist/`                 | AdminLTE theme files                                         |
 
@@ -80,6 +103,10 @@ PHP-FPM and Nginx with PHP-FPM in Docker, then checks that internal files
 are hidden, the PHP options take effect, oversized requests are refused and
 sign-in throttling works. It needs Docker, curl and python3, and runs on
 every pull request.
+
+`tests/app/run.sh` starts MariaDB and Apache with mod_php, then works through
+the lending rules: due dates, overdue blocks, limits, returns, lost items and
+archiving. It needs Docker and curl, and also runs on every pull request.
 
 ## Issues
 

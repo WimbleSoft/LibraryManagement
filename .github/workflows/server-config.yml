@@ -19,3 +19,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check .htaccess, .user.ini and deploy/nginx.conf on Apache, PHP-FPM and Nginx
         run: tests/server/run.sh
+
+  lending:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the lending rules end to end
+        run: tests/app/run.sh
