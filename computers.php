@@ -20,21 +20,23 @@ if (is_post()) {
                 ->prepare('INSERT INTO computers (manufacturer, model, serialNumber) VALUES (?, ?, ?)')
                 ->execute([$manufacturer, $model, $serialNumber]);
             flash('success', t('Process_Successful'));
+        } elseif ($computerId !== null && ($status = posted_item_status($connection, ITEM_COMPUTER, $computerId)) === null) {
+            flash('danger', t('Status_Not_Allowed'));
         } elseif ($computerId !== null) {
             $connection
-                ->prepare('UPDATE computers SET manufacturer = ?, model = ?, serialNumber = ? WHERE computerId = ?')
-                ->execute([$manufacturer, $model, $serialNumber, $computerId]);
+                ->prepare('UPDATE computers SET manufacturer = ?, model = ?, serialNumber = ?, status = ? WHERE computerId = ?')
+                ->execute([$manufacturer, $model, $serialNumber, $status, $computerId]);
             flash('success', t('Process_Successful'));
         }
     } elseif ($action === 'delete' && $computerId !== null) {
-        delete_item($connection, 'computers', 'computerId', ITEM_COMPUTER, $computerId);
+        delete_item($connection, ITEM_COMPUTER, $computerId);
     }
 
     redirect('computers.php');
 }
 
 $computers = $connection
-    ->query('SELECT computerId, manufacturer, model, serialNumber FROM computers ORDER BY manufacturer, model')
+    ->query('SELECT computerId, manufacturer, model, serialNumber, status FROM computers ORDER BY manufacturer, model')
     ->fetchAll();
 $openLoans = open_loans_by_item($connection, ITEM_COMPUTER);
 
@@ -83,7 +85,10 @@ require __DIR__ . '/includes/header.php';
             </thead>
             <tbody>
             <?php foreach ($computers as $computer): ?>
-                <?php $loan = $openLoans[(int) $computer['computerId']] ?? null; ?>
+                <?php
+                $loan = $openLoans[(int) $computer['computerId']] ?? null;
+                $itemStatus = (int) $computer['status'];
+                ?>
                 <tr>
                     <td><?= e($computer['manufacturer']) ?></td>
                     <td><?= e($computer['model']) ?></td>
@@ -123,6 +128,7 @@ require __DIR__ . '/includes/header.php';
                                             <label><?= e(t('Serial_Number')) ?></label>
                                             <input name="serialNumber" type="text" class="form-control" maxlength="50" required value="<?= e($computer['serialNumber']) ?>">
                                         </div>
+                                        <?php require __DIR__ . '/includes/item-status-field.php'; ?>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-default" data-dismiss="modal"><?= e(t('Cancel')) ?></button>

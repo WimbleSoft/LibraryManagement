@@ -19,20 +19,22 @@ if (is_post()) {
                 ->prepare('INSERT INTO books (bookName, bookAuthor) VALUES (?, ?)')
                 ->execute([$bookName, $bookAuthor]);
             flash('success', t('Process_Successful'));
+        } elseif ($bookId !== null && ($status = posted_item_status($connection, ITEM_BOOK, $bookId)) === null) {
+            flash('danger', t('Status_Not_Allowed'));
         } elseif ($bookId !== null) {
             $connection
-                ->prepare('UPDATE books SET bookName = ?, bookAuthor = ? WHERE bookId = ?')
-                ->execute([$bookName, $bookAuthor, $bookId]);
+                ->prepare('UPDATE books SET bookName = ?, bookAuthor = ?, status = ? WHERE bookId = ?')
+                ->execute([$bookName, $bookAuthor, $status, $bookId]);
             flash('success', t('Process_Successful'));
         }
     } elseif ($action === 'delete' && $bookId !== null) {
-        delete_item($connection, 'books', 'bookId', ITEM_BOOK, $bookId);
+        delete_item($connection, ITEM_BOOK, $bookId);
     }
 
     redirect('books.php');
 }
 
-$books = $connection->query('SELECT bookId, bookName, bookAuthor FROM books ORDER BY bookName')->fetchAll();
+$books = $connection->query('SELECT bookId, bookName, bookAuthor, status FROM books ORDER BY bookName')->fetchAll();
 $openLoans = open_loans_by_item($connection, ITEM_BOOK);
 
 $activePage = 'books';
@@ -76,7 +78,10 @@ require __DIR__ . '/includes/header.php';
             </thead>
             <tbody>
             <?php foreach ($books as $book): ?>
-                <?php $loan = $openLoans[(int) $book['bookId']] ?? null; ?>
+                <?php
+                $loan = $openLoans[(int) $book['bookId']] ?? null;
+                $itemStatus = (int) $book['status'];
+                ?>
                 <tr>
                     <td><?= e($book['bookName']) ?></td>
                     <td><?= e($book['bookAuthor']) ?></td>
@@ -111,6 +116,7 @@ require __DIR__ . '/includes/header.php';
                                             <label><?= e(t('Author')) ?></label>
                                             <input name="bookAuthor" type="text" class="form-control" maxlength="100" required value="<?= e($book['bookAuthor']) ?>">
                                         </div>
+                                        <?php require __DIR__ . '/includes/item-status-field.php'; ?>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-default" data-dismiss="modal"><?= e(t('Cancel')) ?></button>

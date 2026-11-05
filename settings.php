@@ -4,6 +4,30 @@ require __DIR__ . '/includes/bootstrap.php';
 $currentUser = require_admin($connection);
 $personnelId = (int) $currentUser['personnelId'];
 
+if (is_post() && ($_POST['action'] ?? '') === 'lending') {
+    verify_csrf();
+
+    $newRules = [];
+    foreach (array_keys(DEFAULT_LENDING_RULES) as $name) {
+        $newRules[$name] = $name === 'blockWhenOverdue' ? (isset($_POST[$name]) ? 1 : 0) : post_int($name);
+    }
+
+    $periods = [$newRules['loanDaysBook'], $newRules['loanDaysComputer'], $newRules['loanDaysKey']];
+    $valid = $newRules['maxOpenLoans'] !== null && $newRules['maxOpenLoans'] >= 0 && $newRules['maxOpenLoans'] <= 100;
+    foreach ($periods as $days) {
+        $valid = $valid && $days !== null && $days >= 0 && $days <= 365;
+    }
+
+    if ($valid) {
+        save_lending_rules($connection, $newRules);
+        flash('success', t('Process_Successful'));
+    } else {
+        flash('danger', t('Lending_Rules_Invalid'));
+    }
+
+    redirect('settings.php');
+}
+
 if (is_post()) {
     verify_csrf();
 
@@ -50,6 +74,8 @@ if (is_post()) {
     redirect('settings.php');
 }
 
+$rules = lending_rules($connection);
+
 $activePage = 'settings';
 $pageTitle = t('Settings');
 require __DIR__ . '/includes/header.php';
@@ -86,6 +112,46 @@ require __DIR__ . '/includes/header.php';
                     <label><?= e(t('Current_Password')) ?></label>
                     <input name="currentPassword" type="password" class="form-control" required autocomplete="current-password" placeholder="<?= e(t('Current_Password_Required')) ?>">
                 </div>
+            </div>
+        </div>
+        <div class="box-footer">
+            <button type="submit" class="btn btn-primary"><?= e(t('Save')) ?></button>
+        </div>
+    </form>
+</div>
+
+<div class="box box-primary">
+    <div class="box-header with-border">
+        <h3 class="box-title"><?= e(t('Lending_Rules')) ?></h3>
+    </div>
+    <form method="post" action="settings.php">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="lending">
+        <div class="box-body">
+            <div class="row">
+                <div class="col-md-3 form-group">
+                    <label><?= e(t('Loan_Days_Book')) ?></label>
+                    <input name="loanDaysBook" type="number" class="form-control" min="0" max="365" required value="<?= e($rules['loanDaysBook']) ?>">
+                </div>
+                <div class="col-md-3 form-group">
+                    <label><?= e(t('Loan_Days_Computer')) ?></label>
+                    <input name="loanDaysComputer" type="number" class="form-control" min="0" max="365" required value="<?= e($rules['loanDaysComputer']) ?>">
+                </div>
+                <div class="col-md-3 form-group">
+                    <label><?= e(t('Loan_Days_Key')) ?></label>
+                    <input name="loanDaysKey" type="number" class="form-control" min="0" max="365" required value="<?= e($rules['loanDaysKey']) ?>">
+                </div>
+                <div class="col-md-3 form-group">
+                    <label><?= e(t('Max_Open_Loans')) ?></label>
+                    <input name="maxOpenLoans" type="number" class="form-control" min="0" max="100" required value="<?= e($rules['maxOpenLoans']) ?>">
+                    <p class="help-block"><?= e(t('Max_Open_Loans_Help')) ?></p>
+                </div>
+            </div>
+            <div class="checkbox">
+                <label>
+                    <input name="blockWhenOverdue" type="checkbox" value="1" <?= $rules['blockWhenOverdue'] ? 'checked' : '' ?>>
+                    <?= e(t('Block_When_Overdue')) ?>
+                </label>
             </div>
         </div>
         <div class="box-footer">
